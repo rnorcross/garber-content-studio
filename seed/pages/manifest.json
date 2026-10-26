@@ -1,0 +1,34 @@
+[
+  {
+    "file": "garber-buick-about.html",
+    "dealership": "garber-buick",
+    "title": "Garber Buick — About Us",
+    "pageType": "about",
+    "liveUrl": "https://www.garberbuick.com/about-garber-buick-dealership-in-saginaw-michigan.htm",
+    "notes": "Imported from the Garber Buick preview site. Images are embedded from the preview; swap in the hosted assets.garberauto.com URLs from the Images tab. Testimonial videos play from YouTube; add a hosted MP4 URL to a card’s data-src to play it directly."
+  },
+  {
+    "file": "garber-buick-history.html",
+    "dealership": "garber-buick",
+    "title": "Garber Buick — Our History",
+    "pageType": "history",
+    "liveUrl": null,
+    "notes": "Imported from the Garber Buick preview site. Images are embedded from the preview; swap in the hosted assets.garberauto.com URLs from the Images tab."
+  },
+  {
+    "file": "garber-buick-community.html",
+    "dealership": "garber-buick",
+    "title": "Garber Buick — Community",
+    "pageType": "community",
+    "liveUrl": null,
+    "notes": "Imported from the Garber Buick preview site. Images are embedded from the preview; swap in the hosted assets.garberauto.com URLs from the Images tab."
+  },
+  {
+    "file": "garber-buick-values.html",
+    "dealership": "garber-buick",
+    "title": "Garber Buick — Mission, Vision & Values",
+    "pageType": "mission",
+    "liveUrl": null,
+    "notes": "Imported from the Garber Buick preview site. Images are embedded from the preview; swap in the hosted assets.garberauto.com URLs from the Images tab."
+  }
+]
