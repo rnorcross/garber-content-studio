@@ -11,7 +11,7 @@ import { readFileSync, readdirSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { buildPage, cleanSampleReviews, metaFor, notesFor, storeFacts, TITLES } from './dealer-pages.mjs';
 
-const url = process.env.DATABASE_URL;
+const url = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.DATABASE_URL_UNPOOLED || process.env.POSTGRES_URL_NON_POOLING;
 if (!url) { console.error('Set DATABASE_URL first (or put it in .env.local)'); process.exit(1); }
 const sql = postgres(url, { ssl: /localhost|127\.0\.0\.1/.test(url) ? false : 'require', max: 1, onnotice: () => {} });
 const seedDir = new URL('../seed/', import.meta.url);

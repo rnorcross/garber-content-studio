@@ -5,9 +5,14 @@ declare global {
   var __sql: ReturnType<typeof postgres> | undefined;
 }
 
+/** The connection string, under any of the names Vercel's Neon integration uses. */
+export function databaseUrl() {
+  return process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.DATABASE_URL_UNPOOLED || process.env.POSTGRES_URL_NON_POOLING;
+}
+
 function make() {
-  const url = process.env.DATABASE_URL;
-  if (!url) throw new Error('DATABASE_URL is not set');
+  const url = databaseUrl();
+  if (!url) throw new Error('No database connection string is set (DATABASE_URL). Connect Neon to the project in Vercel → Storage.');
   const local = /localhost|127\.0\.0\.1|\/var\/run/.test(url);
   return postgres(url, {
     ssl: local ? false : 'require',
@@ -17,7 +22,21 @@ function make() {
   });
 }
 
-export const sql = globalThis.__sql ?? (globalThis.__sql = make());
+type Sql = ReturnType<typeof postgres>;
+const real = (): Sql => globalThis.__sql ?? (globalThis.__sql = make());
+
+/**
+ * Connects on first use rather than when the module loads, so `next build` works before
+ * the database is configured and a missing connection string only fails real requests.
+ */
+export const sql = new Proxy(function () {} as unknown as Sql, {
+  apply: (_t, _this, args) => (real() as any)(...args),
+  get: (_t, prop) => {
+    const s = real() as any;
+    const v = s[prop];
+    return typeof v === 'function' ? v.bind(s) : v;
+  },
+}) as Sql;
 
 export type Dealership = {
   id: number; slug: string; name: string; city: string | null; makes: string[];
