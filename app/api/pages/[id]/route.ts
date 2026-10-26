@@ -1,7 +1,9 @@
 import { sql } from '@/lib/db';
 import { route, json, fail, idOf, type IdCtx } from '@/lib/api';
 
-// Update page details (title, dealership, type, live URL, notes, status).
+const str = (v: unknown) => (v == null || String(v).trim() === '' ? null : String(v).trim());
+
+// Update page details: title, dealership, template, live URL, notes, meta fields, status.
 export const PATCH = route<IdCtx>(async (req, _user, ctx) => {
   const id = await idOf(ctx);
   const b = await req.json();
@@ -12,8 +14,11 @@ export const PATCH = route<IdCtx>(async (req, _user, ctx) => {
   if (typeof b.title === 'string' && b.title.trim()) fields.title = b.title.trim();
   if ('dealershipId' in b) fields.dealership_id = b.dealershipId ? Number(b.dealershipId) : null;
   if (typeof b.pageType === 'string') fields.page_type = b.pageType;
-  if ('liveUrl' in b) fields.live_url = b.liveUrl ? String(b.liveUrl).trim() : null;
-  if ('notes' in b) fields.notes = b.notes ? String(b.notes) : null;
+  if ('liveUrl' in b) fields.live_url = str(b.liveUrl);
+  if ('notes' in b) fields.notes = str(b.notes);
+  if ('metaTitle' in b) fields.meta_title = str(b.metaTitle);
+  if ('metaDescription' in b) fields.meta_description = str(b.metaDescription);
+  if ('canonical' in b) fields.canonical_url = str(b.canonical);
   if (['draft', 'live', 'archived'].includes(b.status)) fields.status = b.status;
   if (!Object.keys(fields).length) return json({ ok: true });
 

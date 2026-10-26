@@ -1,19 +1,5 @@
 import type { Dealership } from './db';
-
-export const PAGE_TYPES = [
-  { id: 'about', label: 'About Us' },
-  { id: 'history', label: 'Our History' },
-  { id: 'community', label: 'Community' },
-  { id: 'mission', label: 'Mission, Vision & Values' },
-  { id: 'homepage', label: 'Homepage section' },
-  { id: 'why-buy', label: 'Why Buy' },
-  { id: 'service', label: 'Service / Specials' },
-  { id: 'faq', label: 'FAQ' },
-  { id: 'landing', label: 'Landing page' },
-  { id: 'custom', label: 'Custom' },
-] as const;
-
-export const pageTypeLabel = (id: string) => PAGE_TYPES.find((t) => t.id === id)?.label ?? 'Custom';
+import type { Template } from './templates';
 
 export const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-5-5';
 
@@ -42,7 +28,7 @@ const FRAGMENT_RULES = (scope: string) => `
 OUTPUT RULES — the HTML is pasted straight into a content area of a live Dealer.com page, which already has its own header, navigation and footer.
 1. Output ONLY the HTML fragment. No markdown fences, no commentary before or after.
 2. No <!doctype>, <html>, <head> or <body>. No site header, nav bar or footer.
-3. Start with (in order): optional Open Graph/Twitter <meta> tags (store pages: og:title, og:description, og:image, twitter:card summary_large_image — Dealer.com has no per-page OG setting), then <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap">, then ONE <style> block, then ONE root element: <div class="${scope}">…</div>.
+3. Start with <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800;900&display=swap">, then ONE <style> block, then ONE root element: <div class="${scope}">…</div>. Do NOT write <meta> tags, <title> or canonical links — the CMS adds the page's SEO and social tags itself.
 4. Every CSS selector must start with .${scope} so nothing leaks into the dealer site's styles. Put design tokens as custom properties on .${scope} itself. Use box-sizing:border-box inside the scope, reset margins on headings/paragraphs inside the scope, and set font-family on .${scope}.
 5. Fully responsive: desktop first, with @media breakpoints at 1023px and 640px. Grids collapse to 2-up then 1-up, type scales down (H1 ≈ 56px → 44px → 34px), section padding shrinks, no horizontal scroll at 375px width.
 6. Plain HTML/CSS. Only add a <script> when the request needs real interaction (accordion, video modal); keep it small, vanilla, wrapped in an IIFE, and scoped to elements inside .${scope}.
@@ -71,18 +57,32 @@ ${DESIGN_SYSTEM}
 ${FRAGMENT_RULES(scope)}`;
 }
 
+export type MediaHint = { url: string; alt: string | null; width: number | null; height: number | null; filename: string };
+
 export function createUser(opts: {
-  dealership: Dealership | null; pageType: string; title: string; prompt: string; content: string; reference?: string;
+  dealership: Dealership | null; template: Template | null; title: string; prompt: string;
+  fields: Record<string, string>; media: MediaHint[]; reference?: string;
 }) {
+  const t = opts.template;
+  const answers = (t?.fields ?? [])
+    .map((f) => [f.label, (opts.fields[f.key] ?? '').trim()] as const)
+    .filter(([, v]) => v)
+    .map(([l, v]) => `${l}:\n${v}`)
+    .join('\n\n');
+  const media = opts.media.length
+    ? `IMAGES IN THE MEDIA LIBRARY FOR THIS DEALERSHIP — prefer these over placeholders, and use their exact URLs:\n${opts.media
+        .map((m) => `- ${m.url}${m.alt ? ` — ${m.alt}` : ` — ${m.filename}`}${m.width && m.height ? ` (${m.width}×${m.height})` : ''}`)
+        .join('\n')}\n`
+    : '';
   return `${dealershipBlock(opts.dealership)}
 
-PAGE TYPE: ${pageTypeLabel(opts.pageType)}
+TEMPLATE: ${t?.name ?? 'Custom page'}
+${t?.brief ? `TEMPLATE BRIEF — follow this structure:\n${t.brief}\n` : ''}
 PAGE TITLE: ${opts.title}
 
-WHAT TO BUILD:
-${opts.prompt || '(no extra direction — build the best page of this type for this dealership)'}
-
-${opts.content ? `CONTENT TO USE (facts and copy supplied by the team — use it faithfully, edit only for flow):\n${opts.content}\n` : ''}
+${answers ? `DETAILS FROM THE TEAM (use faithfully, edit only for flow):\n${answers}\n` : ''}
+${opts.prompt ? `${t?.is_custom ? 'WHAT TO BUILD' : 'EXTRA DIRECTION'}:\n${opts.prompt}\n` : ''}
+${media}
 ${opts.reference ? `STYLE REFERENCE — an existing page from this CMS. Match its layout language, components and polish (inline images there appear as inline-image://N tokens; do not reuse those tokens):\n${opts.reference}\n` : ''}
 Build the complete page now.`;
 }

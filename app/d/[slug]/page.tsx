@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/auth';
 import { sql, type Dealership } from '@/lib/db';
 import TopBar from '@/components/TopBar';
 import PageTable, { type PageRow } from '@/components/PageTable';
+import DealerSettings from './DealerSettings';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,8 +15,8 @@ export default async function DealershipPage({ params }: { params: Promise<{ slu
   if (!d) notFound();
   const pages = await sql<PageRow[]>`
     select p.id, p.title, p.page_type, p.status, p.current_version, p.live_version, p.live_url, p.updated_at,
-           ${d.name} as dealership, ${d.slug} as dslug
-    from pages p where p.dealership_id = ${d.id} and p.status <> 'archived' order by p.updated_at desc`;
+           ${d.name} as dealership, ${d.slug} as dslug, t.name as template, p.live_marked_at, u.name as live_by
+    from pages p left join templates t on t.slug = p.page_type left join users u on u.id = p.live_marked_by where p.dealership_id = ${d.id} and p.status <> 'archived' order by p.updated_at desc`;
 
   return (
     <>
@@ -35,6 +36,7 @@ export default async function DealershipPage({ params }: { params: Promise<{ slu
           </div>
           <Link className="btn primary" href={`/new?d=${d.id}`}>New page for {d.name}</Link>
         </div>
+        <DealerSettings d={JSON.parse(JSON.stringify(d))} canEdit={user.role === 'admin'} />
         <PageTable rows={pages} showDealer={false} />
       </main>
     </>

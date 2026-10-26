@@ -9,6 +9,7 @@ export type ImageRef = {
 };
 
 const ATTR_RE = /<(img|video|source)\b[^>]*?\s(src|poster)\s*=\s*(["'])(.*?)\3/gi;
+const DATA_SRC_RE = /\sdata-src\s*=\s*(["'])([^"']+)\1/gi;
 const CSS_URL_RE = /url\(\s*(["']?)([^"')]+?)\1\s*\)/gi;
 const META_IMG_RE = /<meta\b[^>]*(?:og:image|twitter:image)[^>]*content\s*=\s*(["'])(.*?)\1/gi;
 
@@ -25,6 +26,7 @@ export function listImages(html: string): ImageRef[] {
     const tag = m[1].toLowerCase();
     add(m[4], m[2].toLowerCase() === 'poster' ? 'poster' : tag === 'img' ? 'img' : tag === 'video' ? 'video' : 'source');
   }
+  for (const m of html.matchAll(DATA_SRC_RE)) add(m[2], 'video');
   for (const m of html.matchAll(CSS_URL_RE)) add(m[2], 'css');
   for (const m of html.matchAll(META_IMG_RE)) add(m[2], 'meta');
   return [...map.values()];
@@ -88,4 +90,77 @@ export function previewDoc(fragment: string) {
 
 export function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+}
+
+// --- SEO / social tags -------------------------------------------------------
+// Pages are stored WITHOUT social meta tags. The CMS writes them at copy time from the
+// page's meta title/description and the dealership's Open Graph image, so they never drift.
+
+const SOCIAL_META_RE = /<meta\b[^>]*(?:property|name)\s*=\s*["'](?:og:[a-z_:]+|twitter:[a-z_:]+|description)["'][^>]*>\s*/gi;
+const CANONICAL_RE = /<link\b[^>]*rel\s*=\s*["']canonical["'][^>]*>\s*/gi;
+
+function metaContent(html: string, key: string) {
+  const re = new RegExp(`<meta\\b[^>]*(?:property|name)\\s*=\\s*["']${key}["'][^>]*>`, 'i');
+  const tag = html.match(re)?.[0];
+  return tag?.match(/content\s*=\s*(["'])([\s\S]*?)\1/i)?.[2] ?? null;
+}
+
+/** Pulls social meta tags and any canonical link out of a fragment. */
+export function extractSocialMeta(html: string) {
+  const found = {
+    title: metaContent(html, 'og:title') ?? metaContent(html, 'twitter:title'),
+    description: metaContent(html, 'og:description') ?? metaContent(html, 'description') ?? metaContent(html, 'twitter:description'),
+    image: metaContent(html, 'og:image'),
+    canonical: html.match(CANONICAL_RE)?.[0]?.match(/href\s*=\s*["']([^"']+)/i)?.[1] ?? null,
+  };
+  const clean = html.replace(SOCIAL_META_RE, '').replace(CANONICAL_RE, '').replace(/^\s+/, '');
+  return { html: clean, ...found };
+}
+
+const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+export type HeadInput = {
+  siteName: string;
+  title?: string | null;
+  description?: string | null;
+  image?: string | null;
+  url?: string | null;
+  canonical?: string | null;
+};
+
+/** The tags pasted at the top of the fragment (Dealer.com has no per-page Open Graph setting). */
+export function buildHead(h: HeadInput) {
+  const tags: string[] = ['<meta property="og:type" content="website">', `<meta property="og:site_name" content="${esc(h.siteName)}">`];
+  if (h.title) tags.push(`<meta property="og:title" content="${esc(h.title)}">`);
+  if (h.description) tags.push(`<meta property="og:description" content="${esc(h.description)}">`);
+  if (h.url) tags.push(`<meta property="og:url" content="${esc(h.url)}">`);
+  if (h.image) {
+    tags.push(`<meta property="og:image" content="${esc(h.image)}">`);
+    if (h.image.startsWith('https:')) tags.push(`<meta property="og:image:secure_url" content="${esc(h.image)}">`);
+    tags.push('<meta property="og:image:width" content="1200">', '<meta property="og:image:height" content="630">');
+  }
+  tags.push('<meta name="twitter:card" content="summary_large_image">');
+  if (h.title) tags.push(`<meta name="twitter:title" content="${esc(h.title)}">`);
+  if (h.description) tags.push(`<meta name="twitter:description" content="${esc(h.description)}">`);
+  if (h.image) tags.push(`<meta name="twitter:image" content="${esc(h.image)}">`);
+  if (h.canonical) tags.push(`<link rel="canonical" href="${esc(h.canonical)}">`);
+  return tags.join('\n');
+}
+
+/** What gets copied into Dealer.com: social tags + the stored fragment. */
+export function assemble(fragment: string, head: HeadInput) {
+  return `${buildHead(head)}\n${fragment.trim()}\n`;
+}
+
+export const GROUP_OG_IMAGE = 'https://assets.garberauto.com/assets/open-graph/open-graph-garber-management-group.jpg';
+export const defaultOgImage = (slug: string) => `https://assets.garberauto.com/assets/open-graph/open-graph-${slug}.jpg`;
+
+/** Turns a data: URI into a File for uploading. */
+export async function dataUriToFile(uri: string, base = 'embedded') {
+  const blob = await (await fetch(uri)).blob();
+  const ext = (blob.type.split('/')[1] || 'bin').replace('jpeg', 'jpg').replace('svg+xml', 'svg');
+  const bytes = new Uint8Array(await blob.slice(0, 4096).arrayBuffer());
+  let h = 0;
+  for (const b of bytes) h = (h * 31 + b) >>> 0;
+  return new File([blob], `${base}-${h.toString(16)}.${ext}`, { type: blob.type });
 }

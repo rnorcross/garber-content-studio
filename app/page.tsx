@@ -15,8 +15,9 @@ export default async function Library({ searchParams }: { searchParams: Promise<
 
   const pages = await sql<PageRow[]>`
     select p.id, p.title, p.page_type, p.status, p.current_version, p.live_version, p.live_url, p.updated_at,
-           d.name as dealership, d.slug as dslug
-    from pages p left join dealerships d on d.id = p.dealership_id
+           d.name as dealership, d.slug as dslug, t.name as template, p.live_marked_at, u.name as live_by
+    from pages p left join dealerships d on d.id = p.dealership_id left join templates t on t.slug = p.page_type
+      left join users u on u.id = p.live_marked_by
     where (${q} = '' or p.title ilike ${like} or d.name ilike ${like})
       and (${status} = '' or (${status} = 'stale' and p.live_version is not null and p.current_version <> p.live_version)
            or (${status} = 'draft' and p.live_version is null and p.status <> 'archived')

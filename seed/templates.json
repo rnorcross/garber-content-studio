@@ -1,0 +1,76 @@
+[
+  {
+    "slug": "about",
+    "name": "About Us",
+    "description": "The store's own About page: who they are, how they fit into the Garber family, why customers do better here.",
+    "reference": "Garber Buick — About Us",
+    "sort": 10,
+    "brief": "Build the dealership's About Us page in the clean, card-based layout used for Garber Buick (grey sections holding white rounded cards, arrow badges on linked cards, photo feature cards).\nSections, in order:\n1. Hero on the navy gradient with the store's white logo and a faded storefront photo behind the blue. Eyebrow: city and state. Headline is ALWAYS \"You'll Do Better at Garber\". The store-specific line is the subheading. A short intro paragraph. A 4-up stat strip along the bottom (e.g. 1907 founded in Michigan, 2,500+ team members, 25+ dealerships in 6 states, 3rd generation of family ownership — or store-specific stats when supplied).\n2. About our dealership: how this store fits into the Garber family, with a storefront photo card.\n3. Why customers do better here: 3–4 cards (people, service, value, community) with short copy.\n4. Group accolades row: #1 in America for Customer Service (Widewail, Q4 2025–Q1 2026, 4.9-star average); Automotive News Best Dealerships To Work For (11 Garber stores — a group honor); Crain's Cool Places to Work (4 years, Gateway Financial).\n5. Reviews teaser: rating card linking to the store's Google Business Profile plus 3 review cards (only reviews supplied — otherwise bracketed placeholders).\n6. Links out to the store's Community, Mission/Vision/Values and History pages as arrow cards.\n7. Closing CTA band: Shop new, Shop used, Schedule service (use the store website for links).",
+    "fields": [
+      { "key": "subheading", "label": "Store-specific subheading", "type": "text", "placeholder": "e.g. Where Garber began." },
+      { "key": "story", "label": "The store's story", "type": "textarea", "placeholder": "Year opened or joined Garber, what it's known for, notable people, anything that makes it different." },
+      { "key": "stats", "label": "Store stats (optional)", "type": "textarea", "placeholder": "One per line, e.g. 40+ years in Midland" },
+      { "key": "reviews", "label": "Reviews to feature", "type": "textarea", "placeholder": "Name — stars — review text, one per line. Plus Google rating, review count and GBP link." },
+      { "key": "links", "label": "Page links", "type": "textarea", "placeholder": "URLs for this store's Community, Mission and History pages, if they exist." }
+    ]
+  },
+  {
+    "slug": "mission",
+    "name": "Mission, Vision & Values",
+    "description": "Group-branded mission, vision and core values page with a light local touch.",
+    "reference": "Garber Buick — Mission, Vision & Values",
+    "default_canonical": "https://www.garberauto.com/garber-automotive-group-mission-vision-and-values.htm",
+    "sort": 20,
+    "brief": "Build the Mission, Vision & Values page. It is group-branded and essentially identical across dealerships — only a light touch of locality (the store name and city in the hero and closing line).\nUse the exact group statements:\nMission: \"We are only doing our job properly when we create an experience for which the customer returns to do business with us again.\"\nVision: \"To be the BEST automotive sales and repair operation in every market we serve.\"\nCore values: Honesty, Respect, Empathy, Integrity, Pride, Work Ethic — each with a one-line definition.\nInclude Richard J. Garber Jr.'s line \"Tall buildings are built on strong foundations.\" and the philosophy \"Doing the right thing.\"\nLayout: navy hero, mission as a large pull-quote card, vision as a photo feature card, the six values as cards on a navy or field-blue section, then a closing band linking back to the store's About page.",
+    "fields": [
+      { "key": "local", "label": "Local touch (optional)", "type": "textarea", "placeholder": "A sentence or two tying the values to this store or community." }
+    ]
+  },
+  {
+    "slug": "reviews",
+    "name": "Reviews",
+    "description": "Customer reviews and video testimonials, anchored by the store's Google rating.",
+    "sort": 30,
+    "brief": "Build a Reviews page for the dealership.\nSections, in order:\n1. Hero: headline about what customers say, the store's Google rating card (stars in gold, rating and review count, link to the Google Business Profile), and the group's #1 in America for Customer Service accolade (Widewail study of all U.S. dealership Google profiles, Q4 2025–Q1 2026; 4.9-star average).\n2. A grid of review cards: quote, reviewer's first name and last initial, star rating, and the department or salesperson when supplied. Use ONLY the reviews supplied; never write reviews. If none are supplied, use 6 clearly bracketed placeholder cards.\n3. Video testimonials (only if video URLs are supplied): vertical 9:16 cards that open the video.\n4. Call to action: Leave us a review (link to the GBP review link) and Shop / Schedule service buttons.\nGold stars only (#f5b400). Keep quotes verbatim.",
+    "fields": [
+      { "key": "rating", "label": "Google rating and count", "type": "text", "placeholder": "e.g. 4.8 stars · 2,877 reviews" },
+      { "key": "gbp", "label": "Google Business Profile link", "type": "text", "placeholder": "https://g.page/…" },
+      { "key": "reviews", "label": "Reviews", "type": "textarea", "placeholder": "Name — stars — review text (— salesperson/department), one per line." },
+      { "key": "videos", "label": "Testimonial videos (optional)", "type": "textarea", "placeholder": "Name — video URL (MP4 or YouTube), one per line." }
+    ]
+  },
+  {
+    "slug": "community",
+    "name": "Community",
+    "description": "How Garber and this store give back — partners, impact numbers, local organizations.",
+    "reference": "Garber Buick — Community",
+    "sort": 40,
+    "brief": "Build the Community page. It is group-branded with a light local touch.\nSections, in order:\n1. Navy hero about giving back, with the store's city.\n2. Impact stats on a field-blue band: $1.5M+ given to community organizations every year · 10,000+ employee volunteer hours annually · 200+ local organizations served.\n3. Partner logo grid. Default to the group's national partners — Leukemia & Lymphoma Society, Habitat for Humanity, American Cancer Society, American Heart Association, Junior Achievement, Special Olympics, Boys & Girls Clubs of America, American Red Cross — each tile linking to the organization's website. If local organizations are supplied, use those INSTEAD (each logo linking to its site) and say they are organizations this store worked with over the past year.\n4. Optional story cards for specific events or sponsorships that are supplied.\n5. Closing band: a sponsorship/donation request call to action (contact link supplied, otherwise a bracketed placeholder).",
+    "fields": [
+      { "key": "orgs", "label": "Local organizations (optional)", "type": "textarea", "placeholder": "Name — website — logo URL, one per line. Leave empty to use the group's national partners." },
+      { "key": "stories", "label": "Events or stories (optional)", "type": "textarea", "placeholder": "Short notes on events, sponsorships, volunteer days." },
+      { "key": "contact", "label": "Sponsorship request link (optional)", "type": "text" }
+    ]
+  },
+  {
+    "slug": "history",
+    "name": "History",
+    "description": "The Garber story since 1907, with a light reference to this store.",
+    "reference": "Garber Buick — Our History",
+    "sort": 50,
+    "brief": "Build the History page. It is group-branded and essentially identical across dealerships, with only a light touch of locality (where this store fits into the timeline).\nHero headline: \"A century of automotive pioneering.\" with the white subheading \"1907 and beyond: revolutionizing mobility.\" on the navy gradient with a faded Washington St photo behind the blue (https://digitalteamass.wpenginepowered.com/wp-content/uploads/2025/07/ has the historical photos: founder Guy Garber, Richard Garber Sr., the trans-Atlantic sale, the original implement store, Washington St — use only file URLs supplied).\nThen a chapter-by-chapter timeline as cards (year in bright blue, title, short text): 1907 founding by Guy S. Garber in Saginaw; the early Buick years; the generations of family ownership (Richard Garber Sr., then Richard J. Garber Jr. — never \"Dick Garber\"); growth to 25+ dealerships in six states and 17 brands; today's 2,400+ employees. Use supplied milestones; never invent dates.\nClose with three generations of family ownership and a link back to the store's About page.",
+    "fields": [
+      { "key": "milestones", "label": "Milestones to include", "type": "textarea", "placeholder": "Year — event, one per line. Include when this store opened or joined Garber." },
+      { "key": "photos", "label": "Historical photo URLs (optional)", "type": "textarea" }
+    ]
+  },
+  {
+    "slug": "custom",
+    "name": "Custom page",
+    "description": "Anything else — describe it and Claude designs it in the Garber style.",
+    "is_custom": true,
+    "sort": 90,
+    "brief": "Design a custom page from the request. Choose the sections and layout that best serve the goal, in the same clean card-based Garber style as the other pages (navy or field-blue hero, grey sections with white rounded cards, clear calls to action). Keep it focused: one primary goal and one primary call to action.",
+    "fields": []
+  }
+]

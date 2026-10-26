@@ -1,6 +1,6 @@
-import { sql, addVersion } from '@/lib/db';
+import { sql } from '@/lib/db';
 import { route, json, fail, idOf, type IdCtx } from '@/lib/api';
-import { toFragment } from '@/lib/fragment';
+import { saveHtml } from '@/lib/pages';
 
 const SOURCES = ['edited', 'ai-edit', 'restored', 'imported', 'generated'] as const;
 
@@ -8,12 +8,11 @@ const SOURCES = ['edited', 'ai-edit', 'restored', 'imported', 'generated'] as co
 export const POST = route<IdCtx>(async (req, user, ctx) => {
   const id = await idOf(ctx);
   const b = await req.json();
-  const html = toFragment(String(b.html || ''));
-  if (!html) return fail('Nothing to save');
+  if (!String(b.html || '').trim()) return fail('Nothing to save');
   const source = SOURCES.includes(b.source) ? b.source : 'edited';
   const [page] = await sql`select id from pages where id = ${id}`;
   if (!page) return fail('Page not found', 404);
-  const number = await addVersion(id, html, source, user.id, { prompt: b.prompt || null, note: b.note || null });
+  const number = await saveHtml(id, String(b.html), source, user.id, { prompt: b.prompt || null, note: b.note || null });
   return json({ number });
 });
 

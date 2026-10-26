@@ -1,14 +1,15 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { sql, type Dealership } from '@/lib/db';
 import { getUser } from '@/lib/auth';
-import { MODEL, createSystem, createUser, editSystem, detectScope } from '@/lib/prompt';
+import { MODEL, createSystem, createUser, editSystem, detectScope, type MediaHint } from '@/lib/prompt';
 import { stashInline, slugify } from '@/lib/fragment';
+import { getTemplate } from '@/lib/templates';
 
 export const maxDuration = 300;
 
 /**
  * Streams HTML from Claude.
- *  mode "create": { dealershipId, pageType, title, prompt, content, referencePageId }
+ *  mode "create": { dealershipId, templateSlug, title, prompt, fields, referencePageId }
  *  mode "edit":   { html, instruction }  — html may contain inline-image://N tokens; the client restores them.
  */
 export async function POST(req: Request) {
@@ -31,18 +32,28 @@ export async function POST(req: Request) {
     const dealershipId = b.dealershipId ? Number(b.dealershipId) : null;
     const [d] = dealershipId ? await sql<Dealership[]>`select * from dealerships where id = ${dealershipId}` : [];
     const title = String(b.title || '').trim() || 'Untitled page';
-    const scope = `gcs-${slugify(`${d?.slug ?? 'group'}-${b.pageType || 'page'}`)}`;
+    const template = await getTemplate(String(b.templateSlug || 'custom'));
+    const scope = `gcs-${slugify(`${d?.slug ?? 'group'}-${template?.slug ?? 'page'}`)}`;
+    // the template's reference page unless the person picked another (or "none" = 0)
+    const refId = b.referencePageId === undefined || b.referencePageId === null || b.referencePageId === ''
+      ? template?.reference_page_id : Number(b.referencePageId);
     let reference: string | undefined;
-    if (b.referencePageId) {
+    if (refId) {
       const [ref] = await sql<{ html: string }[]>`
         select v.html from pages p join page_versions v on v.page_id = p.id and v.number = p.current_version
-        where p.id = ${Number(b.referencePageId)}`;
+        where p.id = ${refId}`;
       if (ref) reference = stashInline(ref.html).html.slice(0, 80_000);
     }
+    const media = await sql<MediaHint[]>`
+      select url, alt, width, height, filename from media
+      where (dealership_id = ${dealershipId} or (${dealershipId}::int is null and dealership_id is null))
+        and content_type like 'image/%'
+      order by created_at desc limit 40`;
     system = createSystem(scope);
     userMsg = createUser({
-      dealership: d ?? null, pageType: String(b.pageType || 'custom'), title,
-      prompt: String(b.prompt || ''), content: String(b.content || ''), reference,
+      dealership: d ?? null, template, title, prompt: String(b.prompt || ''),
+      fields: (b.fields && typeof b.fields === 'object' ? b.fields : {}) as Record<string, string>,
+      media: [...media], reference,
     });
   }
 

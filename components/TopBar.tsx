@@ -1,11 +1,16 @@
 import Link from 'next/link';
 import type { SessionUser } from '@/lib/auth';
 
-export default function TopBar({ user, on }: { user: SessionUser; on?: 'library' | 'new' | 'team' | 'account' }) {
-  const tabs: [NonNullable<typeof on>, string, string][] = [
+export type Section = 'library' | 'new' | 'media' | 'templates' | 'team' | 'account';
+
+export default function TopBar({ user, on }: { user: SessionUser; on?: Section }) {
+  const tabs: [Section, string, string][] = [
     ['library', '/', 'Library'],
     ['new', '/new', 'New Page'],
-    ...(user.role === 'admin' ? [['team', '/team', 'Team'] as [NonNullable<typeof on>, string, string]] : []),
+    ['media', '/media', 'Media'],
+    ...(user.role === 'admin'
+      ? ([['templates', '/templates', 'Templates'], ['team', '/team', 'Team']] as [Section, string, string][])
+      : []),
     ['account', '/account', 'Account'],
   ];
   return (

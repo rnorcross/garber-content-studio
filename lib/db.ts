@@ -22,7 +22,7 @@ export const sql = globalThis.__sql ?? (globalThis.__sql = make());
 export type Dealership = {
   id: number; slug: string; name: string; city: string | null; makes: string[];
   website: string | null; logo: string | null; logo_white: string | null;
-  image_h: string | null; image_v: string | null; notes: string | null; sort: number;
+  image_h: string | null; image_v: string | null; notes: string | null; sort: number; og_image: string | null;
 };
 
 export type Page = {
@@ -30,7 +30,13 @@ export type Page = {
   live_url: string | null; status: 'draft' | 'live' | 'archived';
   current_version: number | null; live_version: number | null;
   live_marked_at: string | null; notes: string | null;
+  meta_title: string | null; meta_description: string | null; canonical_url: string | null;
   created_at: string; updated_at: string;
+};
+
+export type LiveEvent = {
+  id: number; page_id: number; version: number; live_url: string | null; note: string | null;
+  user_name: string | null; created_at: string;
 };
 
 export type Version = {
