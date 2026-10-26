@@ -53,6 +53,18 @@ for (const t of templates) {
 }
 console.log(`Templates: ${templates.map((t) => t.name).join(', ')}`);
 
+// First admin from ADMIN_EMAIL / ADMIN_PASSWORD (same settings the app uses on first sign-in).
+// Only created when that email has no account yet; an existing password is never changed.
+const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase().trim();
+if (adminEmail && process.env.ADMIN_PASSWORD) {
+  const [has] = await sql`select 1 from users where email = ${adminEmail}`;
+  if (!has) {
+    const { default: bcrypt } = await import('bcryptjs');
+    await sql`insert into users (email, name, password_hash, role)
+              values (${adminEmail}, ${process.env.ADMIN_NAME || 'Admin'}, ${await bcrypt.hash(process.env.ADMIN_PASSWORD, 10)}, 'admin')`;
+    console.log(`Admin account created: ${adminEmail}`);
+  }
+}
 const [admin] = await sql`select id from users where role = 'admin' order by id limit 1`;
 const dealerRows = await sql`select * from dealerships`;
 const dealerBySlug = Object.fromEntries(dealerRows.map((d) => [d.slug, d]));

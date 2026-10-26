@@ -43,7 +43,7 @@ A small CMS for the HTML content the Garber marketing team embeds on dealership 
 
    The seed loads the 34-store roster, the six starter templates, the 35 shared images (uploaded once to Blob), the four Garber Buick pages, and **a pre-built page for every template at every Garber dealership** — 150 pages across 30 stores. It's safe to run again: it only adds what's missing and never overwrites pages or templates edited in the app. Run `db:migrate` again after updates; it only adds what's missing.
 
-7. **Deploy** in Vercel, open the site, and sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`. That creates the first admin. Add teammates from **Team**; each gets a temporary password and picks their own on first sign-in.
+7. **Deploy** in Vercel, open the site, and sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`. The seed creates that admin account (signing in first also works). Change the password under **Account** afterwards. Add teammates from **Team**; each gets a temporary password and picks their own on first sign-in.
 
 ## Local development
 
