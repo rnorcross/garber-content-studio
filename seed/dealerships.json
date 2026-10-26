@@ -1,40 +1,459 @@
 {
-  "note": "Garber Automotive Group store roster. Logo and image URLs are served from the live Garber asset CDN (assets.garberauto.com) — reference them directly; do not copy into the design system.",
+  "note": "Garber Automotive Group store roster. Logo and image URLs are served from the live Garber asset CDN (assets.garberauto.com) \u2014 reference them directly; do not copy into the design system.",
   "cdnBase": "https://assets.garberauto.com/assets",
   "dealerships": [
-    { "slug": "delray-buick-gmc", "name": "Delray Buick GMC", "makes": ["Buick","GMC"], "city": "Delray Beach, FL", "website": "https://www.delraybuickgmc.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/delray-modern-logo-white.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/delray-modern-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/delray-buick-gmc-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/delray-buick-gmc-vertical.jpg" },
-    { "slug": "hilton-head-buick-gmc", "name": "Hilton Head Buick GMC", "makes": ["Buick","GMC"], "city": "Savannah, GA", "website": "https://www.hiltonheadauto.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/hilton-head-buick-gmc-white-logo-horizontal.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/hilton-head-buick-gmc-modern-logo-horizontal.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/hilton-head-buick-gmc-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/hilton-head-buick-gmc-vertical.jpg" },
-    { "slug": "hilton-head-cadillac", "name": "Hilton Head Cadillac", "makes": ["Cadillac"], "city": "Savannah, GA", "website": "https://www.hiltonheadcadillac.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/hilton-head-cadillac-logo-horizontal-logo-white.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/hilton-head-cadillac-logo-horizontal-logo-black.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/hilton-head-cadillac-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/hilton-head-cadillac-vertical.jpg" },
-    { "slug": "garber-automall-cdjr", "name": "Garber Automall CDJR", "makes": ["Chrysler","Dodge","Jeep","RAM"], "city": "Orange Park, FL", "website": "https://www.garberchryslerdodgejeep.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-automall-cdjr-white-logo-vertical.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-automall-cdjr-modern-logo-vertical.png", "imageHorizontal": null, "imageVertical": null },
-    { "slug": "garber-automall-ford", "name": "Garber Automall Ford", "makes": ["Ford"], "city": "Orange Park, FL", "website": "https://www.garberautomall.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-ford-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-ford-modern-logo.png", "imageHorizontal": null, "imageVertical": null },
-    { "slug": "garber-automall-gm", "name": "Garber Automall GM", "makes": ["Chevrolet","Buick","GMC"], "city": "Orange Park, FL", "website": "https://www.garberautomall.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-automall-gm-white-logo-vertical.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-automall-gm-modern-logo-vertical.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-automall-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-automall-vertical.jpg" },
-    { "slug": "garber-nissan", "name": "Garber Nissan", "makes": ["Nissan"], "city": "Saginaw, MI", "website": "https://www.garbernissan.net", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-nissan-left-side-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-nissan-left-side-modern-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-nissan-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-nissan-vertical.jpg" },
-    { "slug": "garber-hyundai", "name": "Garber Hyundai", "makes": ["Hyundai"], "city": "Saginaw, MI", "website": "https://www.garberhyundai.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-hyundai-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-hyundai-modern-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-hyundai-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-hyundai-vertical.jpg" },
-    { "slug": "garber-chevrolet-webster", "name": "Garber Chevrolet Webster", "makes": ["Chevrolet"], "city": "Rochester, NY", "website": "https://www.parkerchevroletwebster.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/parker-chevrolet-primary-logo-white-horizontal.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/parker-chevrolet-primary-logo-full-color-horizontal.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-chevrolet-webster-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-chevrolet-webster-vertical.jpg" },
-    { "slug": "garber-subaru", "name": "Garber Subaru", "makes": ["Subaru"], "city": "Webster, NY", "website": "https://www.parkersubaruwebster.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-subaru-webster-white.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-subaru-webster.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-subaru-rochester-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-subaru-rochester-vertical.jpg" },
-    { "slug": "garber-buick", "name": "Garber Buick", "makes": ["Buick"], "city": "Saginaw, MI", "website": "https://www.garberbuick.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-buick-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-buick-modern-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-buick-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-buick-vertical.jpg" },
-    { "slug": "garber-chevrolet-saginaw", "name": "Garber Chevrolet Saginaw", "makes": ["Chevrolet"], "city": "Saginaw, MI", "website": "https://www.garberchevroletsaginaw.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-chevrolet-saginaw-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-chevrolet-saginaw-modern-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-chevrolet-saginaw-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-chevrolet-saginaw-vertical.jpg" },
-    { "slug": "garber-chevrolet-midland", "name": "Garber Chevrolet Midland", "makes": ["Chevrolet"], "city": "Midland, MI", "website": "https://www.garbermidland.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-chevrolet-midland-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-chevrolet-midland-modern-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-chevrolet-midland-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-chevrolet-midland-vertical.jpg" },
-    { "slug": "garber-chevrolet-linwood", "name": "Garber Chevrolet Linwood", "makes": ["Chevrolet"], "city": "Linwood, MI", "website": "https://www.garberlinwood.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-chevrolet-linwood-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-chevrolet-linwood-modern-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-chevrolet-linwood-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-chevrolet-linwood-vertical.jpg" },
-    { "slug": "garber-chevrolet-chesaning", "name": "Garber Chevrolet Chesaning", "makes": ["Chevrolet"], "city": "Chesaning, MI", "website": "https://www.garberchesaning.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-chevrolet-chesaning-primary-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-chevrolet-chesaning-primary-full-color-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-chevrolet-buick-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-chevrolet-buick-vertical.jpg" },
-    { "slug": "curtis-garber-chevrolet", "name": "Curtis Garber Chevrolet", "makes": ["Chevrolet"], "city": "Caro, MI", "website": "https://www.curtisgarberchevrolet.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/curtis-garber-white-logo-chevrolet.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/curtis-garber-modern-logo-chevrolet.png", "imageHorizontal": null, "imageVertical": null },
-    { "slug": "curtis-garber-cadillac", "name": "Curtis Garber Cadillac", "makes": ["Cadillac"], "city": "Caro, MI", "website": "https://www.curtisgarbercadillac.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/curtis-garber-white-logo-cadillac.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/curtis-garber-modern-logo-cadillac.png", "imageHorizontal": null, "imageVertical": null },
-    { "slug": "sunrise-chevrolet", "name": "Sunrise Chevrolet", "makes": ["Chevrolet"], "city": "Glendale Heights, IL", "website": "https://www.sunrisechevrolet.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/sunrise-chevrolet-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/sunrise-chevrolet-modern-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/sunrise-chevrolet-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/sunrise-chevrolet-vertical.jpg" },
-    { "slug": "nissan-of-bradenton", "name": "Nissan of Bradenton", "makes": ["Nissan"], "city": "Bradenton, FL", "website": "https://www.nissanofbradenton.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/nissan-of-bradenton-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/nissan-of-bradenton-black-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/nissan-of-bradenton-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/nissan-of-bradenton-vertical.jpg" },
-    { "slug": "garber-buick-gmc", "name": "Garber Buick GMC", "makes": ["Buick","GMC"], "city": "Fort Pierce, FL", "website": "https://www.garberbuickgmc.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-buick-gmc-ft-pierce-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-buick-gmc-ft-pierce-modern-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-buick-gmc-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-buick-gmc-vertical.jpg" },
-    { "slug": "garber-chevrolet-highland", "name": "Garber Chevrolet Highland", "makes": ["Chevrolet"], "city": "Highland, IN", "website": "https://www.garberhighland.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-chevrolet-highland-primary-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-chevrolet-highland-primary-full-color-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/garber-chevrolet-highland.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-chevrolet-highland-horizontal.jpg" },
-    { "slug": "garber-honda", "name": "Garber Honda", "makes": ["Honda"], "city": "Rochester, NY", "website": "https://www.garberhonda.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-honda-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-honda-modern-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-honda-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-honda-vertical.jpg" },
-    { "slug": "acura-of-rochester", "name": "Acura of Rochester", "makes": ["Acura"], "city": "Rochester, NY", "website": "https://www.acuraofrochester.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/acura-of-rochester-white-logo.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/acura-of-rochester-modern-logo.png", "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/acura-of-rochester.jpg", "imageVertical": null },
-    { "slug": "porsche-rochester", "name": "Porsche Rochester", "makes": ["Porsche"], "city": "Rochester, NY", "website": "https://www.porscherochester.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/porsche-rochester-logo-vertical-white.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/porsche-rochester-logo-vertical.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/porsche-rochester-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/porsche-rochester-vertical.jpg" },
-    { "slug": "audi-rochester", "name": "Audi Rochester", "makes": ["Audi"], "city": "Rochester, NY", "website": "https://www.audirochester.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/audi-rochester-logo-vertical-white.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/audi-rochester-logo-vertical.png", "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/audi-rochester.jpg", "imageVertical": null },
-    { "slug": "volvo-cars-rochester", "name": "Volvo Cars Rochester", "makes": ["Volvo"], "city": "Rochester, NY", "website": "https://www.volvocarsrochester.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/volvo-cars-rochester-horizontal-stacked-white.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/volvo-cars-rochester-horizontal-stacked.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/volvo-cars-rochester-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/volvo-cars-rochester-vertical.jpg" },
-    { "slug": "garber-cdjr-saginaw", "name": "Garber CDJR Saginaw", "makes": ["Chrysler","Dodge","Jeep","RAM"], "city": "Saginaw, MI", "website": "https://www.garberchryslerdodgeramjeep.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-CDJR-sag-white-logo-vertical.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-CDJR-sag-modern-logo-vertical.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-cdjr-saginaw-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-cdjr-saginaw-vertical.jpg" },
-    { "slug": "garber-randall-chevrolet", "name": "Garber Randall Chevrolet", "makes": ["Chevrolet"], "city": "Canandaigua, NY", "website": "https://www.garberrandallchevrolet.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-randall-chevrolet-white.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-randall-chevrolet-color.png", "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/randall-chevrolet.jpg", "imageVertical": null },
-    { "slug": "garber-randall-buick-gmc", "name": "Garber Randall Buick GMC", "makes": ["Buick","GMC"], "city": "Canandaigua, NY", "website": "https://www.garberrandallbuickgmc.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-randall-buick-gmc-white.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-randall-buick-gmc-color.png", "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/randall-buick-gmc-cadillac.jpg", "imageVertical": null },
-    { "slug": "garber-randall-cadillac", "name": "Garber Randall Cadillac", "makes": ["Cadillac"], "city": "Canandaigua, NY", "website": "https://www.garberrandallcadillac.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-randall-cadillac-white.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-randall-cadillac-color.png", "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/randall-buick-gmc-cadillac.jpg", "imageVertical": null },
-    { "slug": "garber-randall-overall", "name": "Garber Randall (Overall)", "makes": [], "city": "Canandaigua, NY", "website": null, "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-randall-white.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-randall-color.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-randall-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-randall-vertical.jpg" },
-    { "slug": "garber-automall-overall", "name": "Garber Automall (Overall)", "makes": [], "city": "Orange Park, FL", "website": null, "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-automall-overall-logo-white.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-automall-overall-logo-color.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-automall-overall-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-automall-overall-vertical.jpg" },
-    { "slug": "garber-ford-bay-city", "name": "Garber Ford Bay City", "makes": ["Ford"], "city": "Bay City, MI", "website": "https://www.garberfordbaycity.com", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-ford-bay-city-white.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-ford-bay-city-color.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-ford-bay-city-horizontal.jpg", "imageVertical": null },
-    { "slug": "garber-cdjr-valparaiso", "name": "Garber CDJR Valparaiso", "makes": ["Chrysler","Dodge","Jeep","RAM"], "city": "Valparaiso, IN", "website": "https://www.garbervalpo.com/", "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-CDJR-valparaiso-white-logo-vertical.png", "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-CDJR-valparaiso-modern-logo-vertical.png", "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-valparaiso-horizontal.jpg", "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-cdjr-saginaw-vertical.jpg" }
+    {
+      "slug": "delray-buick-gmc",
+      "name": "Delray Buick GMC",
+      "makes": [
+        "Buick",
+        "GMC"
+      ],
+      "city": "Delray Beach, FL",
+      "website": "https://www.delraybuickgmc.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/delray-modern-logo-white.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/delray-modern-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/delray-buick-gmc-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/delray-buick-gmc-vertical.jpg"
+    },
+    {
+      "slug": "hilton-head-buick-gmc",
+      "name": "Hilton Head Buick GMC",
+      "makes": [
+        "Buick",
+        "GMC"
+      ],
+      "city": "Bluffton, SC",
+      "website": "https://www.hiltonheadauto.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/hilton-head-buick-gmc-white-logo-horizontal.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/hilton-head-buick-gmc-modern-logo-horizontal.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/hilton-head-buick-gmc-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/hilton-head-buick-gmc-vertical.jpg"
+    },
+    {
+      "slug": "hilton-head-cadillac",
+      "name": "Hilton Head Cadillac",
+      "makes": [
+        "Cadillac"
+      ],
+      "city": "Bluffton, SC",
+      "website": "https://www.hiltonheadcadillac.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/hilton-head-cadillac-logo-horizontal-logo-white.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/hilton-head-cadillac-logo-horizontal-logo-black.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/hilton-head-cadillac-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/hilton-head-cadillac-vertical.jpg"
+    },
+    {
+      "slug": "garber-automall-cdjr",
+      "name": "Garber Automall CDJR",
+      "makes": [
+        "Chrysler",
+        "Dodge",
+        "Jeep",
+        "RAM"
+      ],
+      "city": "Orange Park, FL",
+      "website": "https://www.garberchryslerdodgejeep.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-automall-cdjr-white-logo-vertical.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-automall-cdjr-modern-logo-vertical.png",
+      "imageHorizontal": null,
+      "imageVertical": null
+    },
+    {
+      "slug": "garber-automall-ford",
+      "name": "Garber Automall Ford",
+      "makes": [
+        "Ford"
+      ],
+      "city": "Orange Park, FL",
+      "website": "https://www.garberautomall.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-ford-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-ford-modern-logo.png",
+      "imageHorizontal": null,
+      "imageVertical": null
+    },
+    {
+      "slug": "garber-automall-gm",
+      "name": "Garber Automall GM",
+      "makes": [
+        "Chevrolet",
+        "Buick",
+        "GMC"
+      ],
+      "city": "Orange Park, FL",
+      "website": "https://www.garberautomall.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-automall-gm-white-logo-vertical.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-automall-gm-modern-logo-vertical.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-automall-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-automall-vertical.jpg"
+    },
+    {
+      "slug": "garber-nissan",
+      "name": "Garber Nissan",
+      "makes": [
+        "Nissan"
+      ],
+      "city": "Saginaw, MI",
+      "website": "https://www.garbernissan.net",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-nissan-left-side-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-nissan-left-side-modern-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-nissan-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-nissan-vertical.jpg"
+    },
+    {
+      "slug": "garber-hyundai",
+      "name": "Garber Hyundai",
+      "makes": [
+        "Hyundai"
+      ],
+      "city": "Saginaw, MI",
+      "website": "https://www.garberhyundai.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-hyundai-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-hyundai-modern-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-hyundai-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-hyundai-vertical.jpg"
+    },
+    {
+      "slug": "garber-chevrolet-webster",
+      "name": "Garber Chevrolet Webster",
+      "makes": [
+        "Chevrolet"
+      ],
+      "city": "Rochester, NY",
+      "website": "https://www.parkerchevroletwebster.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/parker-chevrolet-primary-logo-white-horizontal.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/parker-chevrolet-primary-logo-full-color-horizontal.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-chevrolet-webster-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-chevrolet-webster-vertical.jpg"
+    },
+    {
+      "slug": "garber-subaru",
+      "name": "Garber Subaru",
+      "makes": [
+        "Subaru"
+      ],
+      "city": "Webster, NY",
+      "website": "https://www.parkersubaruwebster.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-subaru-webster-white.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-subaru-webster.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-subaru-rochester-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-subaru-rochester-vertical.jpg"
+    },
+    {
+      "slug": "garber-buick",
+      "name": "Garber Buick",
+      "makes": [
+        "Buick"
+      ],
+      "city": "Saginaw, MI",
+      "website": "https://www.garberbuick.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-buick-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-buick-modern-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-buick-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-buick-vertical.jpg"
+    },
+    {
+      "slug": "garber-chevrolet-saginaw",
+      "name": "Garber Chevrolet Saginaw",
+      "makes": [
+        "Chevrolet"
+      ],
+      "city": "Saginaw, MI",
+      "website": "https://www.garberchevroletsaginaw.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-chevrolet-saginaw-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-chevrolet-saginaw-modern-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-chevrolet-saginaw-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-chevrolet-saginaw-vertical.jpg"
+    },
+    {
+      "slug": "garber-chevrolet-midland",
+      "name": "Garber Chevrolet Midland",
+      "makes": [
+        "Chevrolet"
+      ],
+      "city": "Midland, MI",
+      "website": "https://www.garbermidland.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-chevrolet-midland-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-chevrolet-midland-modern-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-chevrolet-midland-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-chevrolet-midland-vertical.jpg"
+    },
+    {
+      "slug": "garber-chevrolet-linwood",
+      "name": "Garber Chevrolet Linwood",
+      "makes": [
+        "Chevrolet"
+      ],
+      "city": "Linwood, MI",
+      "website": "https://www.garberlinwood.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-chevrolet-linwood-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-chevrolet-linwood-modern-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-chevrolet-linwood-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-chevrolet-linwood-vertical.jpg"
+    },
+    {
+      "slug": "garber-chevrolet-chesaning",
+      "name": "Garber Chevrolet Chesaning",
+      "makes": [
+        "Chevrolet"
+      ],
+      "city": "Chesaning, MI",
+      "website": "https://www.garberchesaning.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-chevrolet-chesaning-primary-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-chevrolet-chesaning-primary-full-color-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-chevrolet-buick-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-chevrolet-buick-vertical.jpg"
+    },
+    {
+      "slug": "curtis-garber-chevrolet",
+      "name": "Curtis Garber Chevrolet",
+      "makes": [
+        "Chevrolet"
+      ],
+      "city": "Caro, MI",
+      "website": "https://www.curtisgarberchevrolet.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/curtis-garber-white-logo-chevrolet.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/curtis-garber-modern-logo-chevrolet.png",
+      "imageHorizontal": null,
+      "imageVertical": null
+    },
+    {
+      "slug": "curtis-garber-cadillac",
+      "name": "Curtis Garber Cadillac",
+      "makes": [
+        "Cadillac"
+      ],
+      "city": "Caro, MI",
+      "website": "https://www.curtisgarbercadillac.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/curtis-garber-white-logo-cadillac.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/curtis-garber-modern-logo-cadillac.png",
+      "imageHorizontal": null,
+      "imageVertical": null
+    },
+    {
+      "slug": "sunrise-chevrolet",
+      "name": "Sunrise Chevrolet",
+      "makes": [
+        "Chevrolet"
+      ],
+      "city": "Glendale Heights, IL",
+      "website": "https://www.sunrisechevrolet.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/sunrise-chevrolet-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/sunrise-chevrolet-modern-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/sunrise-chevrolet-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/sunrise-chevrolet-vertical.jpg"
+    },
+    {
+      "slug": "nissan-of-bradenton",
+      "name": "Nissan of Bradenton",
+      "makes": [
+        "Nissan"
+      ],
+      "city": "Bradenton, FL",
+      "website": "https://www.nissanofbradenton.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/nissan-of-bradenton-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/nissan-of-bradenton-black-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/nissan-of-bradenton-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/nissan-of-bradenton-vertical.jpg"
+    },
+    {
+      "slug": "garber-buick-gmc",
+      "name": "Garber Buick GMC",
+      "makes": [
+        "Buick",
+        "GMC"
+      ],
+      "city": "Fort Pierce, FL",
+      "website": "https://www.garberbuickgmc.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-buick-gmc-ft-pierce-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-buick-gmc-ft-pierce-modern-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-buick-gmc-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-buick-gmc-vertical.jpg"
+    },
+    {
+      "slug": "garber-chevrolet-highland",
+      "name": "Garber Chevrolet Highland",
+      "makes": [
+        "Chevrolet"
+      ],
+      "city": "Highland, IN",
+      "website": "https://www.garberhighland.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-chevrolet-highland-primary-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-chevrolet-highland-primary-full-color-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/garber-chevrolet-highland.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-chevrolet-highland-horizontal.jpg"
+    },
+    {
+      "slug": "garber-honda",
+      "name": "Garber Honda",
+      "makes": [
+        "Honda"
+      ],
+      "city": "Rochester, NY",
+      "website": "https://www.garberhonda.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-honda-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-honda-modern-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-honda-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-honda-vertical.jpg"
+    },
+    {
+      "slug": "acura-of-rochester",
+      "name": "Acura of Rochester",
+      "makes": [
+        "Acura"
+      ],
+      "city": "Rochester, NY",
+      "website": "https://www.acuraofrochester.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/acura-of-rochester-white-logo.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/acura-of-rochester-modern-logo.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/acura-of-rochester.jpg",
+      "imageVertical": null
+    },
+    {
+      "slug": "porsche-rochester",
+      "name": "Porsche Rochester",
+      "makes": [
+        "Porsche"
+      ],
+      "city": "Rochester, NY",
+      "website": "https://www.porscherochester.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/porsche-rochester-logo-vertical-white.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/porsche-rochester-logo-vertical.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/porsche-rochester-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/porsche-rochester-vertical.jpg"
+    },
+    {
+      "slug": "audi-rochester",
+      "name": "Audi Rochester",
+      "makes": [
+        "Audi"
+      ],
+      "city": "Rochester, NY",
+      "website": "https://www.audirochester.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/audi-rochester-logo-vertical-white.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/audi-rochester-logo-vertical.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/audi-rochester.jpg",
+      "imageVertical": null
+    },
+    {
+      "slug": "volvo-cars-rochester",
+      "name": "Volvo Cars Rochester",
+      "makes": [
+        "Volvo"
+      ],
+      "city": "Rochester, NY",
+      "website": "https://www.volvocarsrochester.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/volvo-cars-rochester-horizontal-stacked-white.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/volvo-cars-rochester-horizontal-stacked.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/volvo-cars-rochester-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/volvo-cars-rochester-vertical.jpg"
+    },
+    {
+      "slug": "garber-cdjr-saginaw",
+      "name": "Garber CDJR Saginaw",
+      "makes": [
+        "Chrysler",
+        "Dodge",
+        "Jeep",
+        "RAM"
+      ],
+      "city": "Saginaw, MI",
+      "website": "https://www.garberchryslerdodgeramjeep.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-CDJR-sag-white-logo-vertical.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-CDJR-sag-modern-logo-vertical.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-cdjr-saginaw-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-cdjr-saginaw-vertical.jpg"
+    },
+    {
+      "slug": "garber-randall-chevrolet",
+      "name": "Garber Randall Chevrolet",
+      "makes": [
+        "Chevrolet"
+      ],
+      "city": "Canandaigua, NY",
+      "website": "https://www.garberrandallchevrolet.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-randall-chevrolet-white.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-randall-chevrolet-color.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/randall-chevrolet.jpg",
+      "imageVertical": null
+    },
+    {
+      "slug": "garber-randall-buick-gmc",
+      "name": "Garber Randall Buick GMC",
+      "makes": [
+        "Buick",
+        "GMC"
+      ],
+      "city": "Canandaigua, NY",
+      "website": "https://www.garberrandallbuickgmc.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-randall-buick-gmc-white.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-randall-buick-gmc-color.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/randall-buick-gmc-cadillac.jpg",
+      "imageVertical": null
+    },
+    {
+      "slug": "garber-randall-cadillac",
+      "name": "Garber Randall Cadillac",
+      "makes": [
+        "Cadillac"
+      ],
+      "city": "Canandaigua, NY",
+      "website": "https://www.garberrandallcadillac.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-randall-cadillac-white.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-randall-cadillac-color.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/randall-buick-gmc-cadillac.jpg",
+      "imageVertical": null
+    },
+    {
+      "slug": "garber-randall-overall",
+      "name": "Garber Randall (Overall)",
+      "makes": [],
+      "city": "Canandaigua, NY",
+      "website": null,
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-randall-white.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-randall-color.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-randall-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-randall-vertical.jpg"
+    },
+    {
+      "slug": "garber-automall-overall",
+      "name": "Garber Automall (Overall)",
+      "makes": [],
+      "city": "Orange Park, FL",
+      "website": null,
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-automall-overall-logo-white.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-automall-overall-logo-color.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-automall-overall-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-automall-overall-vertical.jpg"
+    },
+    {
+      "slug": "garber-ford-bay-city",
+      "name": "Garber Ford Bay City",
+      "makes": [
+        "Ford"
+      ],
+      "city": "Bay City, MI",
+      "website": "https://www.garberfordbaycity.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-ford-bay-city-white.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-ford-bay-city-color.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-ford-bay-city-horizontal.jpg",
+      "imageVertical": null
+    },
+    {
+      "slug": "garber-cdjr-valparaiso",
+      "name": "Garber CDJR Valparaiso",
+      "makes": [
+        "Chrysler",
+        "Dodge",
+        "Jeep",
+        "RAM"
+      ],
+      "city": "Valparaiso, IN",
+      "website": "https://www.garbervalpo.com/",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-CDJR-valparaiso-white-logo-vertical.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-CDJR-valparaiso-modern-logo-vertical.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-valparaiso-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-cdjr-saginaw-vertical.jpg"
+    }
   ]
 }

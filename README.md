@@ -31,15 +31,17 @@ A small CMS for the HTML content the Garber marketing team embeds on dealership 
    | `ADMIN_NAME` | Optional, e.g. `Robert Norcross` |
    | `ANTHROPIC_MODEL` | Optional, defaults to `claude-sonnet-5-5` |
 
-6. **Create tables and load content**, from this folder on any computer with Node 20+:
+6. **Create tables and load content**, from this folder on any computer with Node 22+. Pull the project's environment variables first so the seed can reach Neon and Blob:
 
    ```bash
    npm install
-   DATABASE_URL="<the Neon connection string>" npm run db:migrate
-   DATABASE_URL="<the Neon connection string>" npm run db:seed
+   npx vercel link          # pick the garber-content-studio project
+   npx vercel env pull .env.local
+   npm run db:migrate
+   npm run db:seed
    ```
 
-   The seed loads all 36 dealerships (roster, logos and storefront photos from `assets.garberauto.com`), the six starter templates, and the four imported Garber Buick pages. It's safe to run again, and it never overwrites templates you've edited in the app. Run `db:migrate` again after updates; it only adds what's missing.
+   The seed loads the 34-store roster, the six starter templates, the 35 shared images (uploaded once to Blob), the four Garber Buick pages, and **a pre-built page for every template at every Garber dealership** — 150 pages across 30 stores. It's safe to run again: it only adds what's missing and never overwrites pages or templates edited in the app. Run `db:migrate` again after updates; it only adds what's missing.
 
 7. **Deploy** in Vercel, open the site, and sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`. That creates the first admin. Add teammates from **Team**; each gets a temporary password and picks their own on first sign-in.
 
@@ -68,3 +70,14 @@ Without `BLOB_READ_WRITE_TOKEN` (local development), uploads are saved under `.d
 - Very long pages can exceed what Claude returns in one response. When that happens the result is discarded with a message rather than saved half-finished. Narrower instructions or hosted images help.
 - Generation can take a minute or two on long pages. The API route allows up to 300 seconds, the limit on Vercel's standard plan.
 - `scripts/build-seed.mjs` documents how the Garber Buick pages were converted from the preview site; it isn't needed again.
+
+## The pre-built dealership pages
+
+`scripts/dealer-pages.mjs` builds each store's version of the five templates from the Garber Buick originals:
+
+- **Mission, Vision & Values, Community, History** are group-branded, so they keep the Buick content and get the store's links (inventory, service scheduler, careers) and a local closing line.
+- **About Us** gets the store's name, city, brands, white logo, storefront photo, links and Google reviews link, with copy that's true for every Garber store. Each page's notes list what to finish: the store's own story, and its Google rating, review count and reviews (marked in brackets).
+- **Reviews** combines a hero, the About page's reviews and recognition sections, and a "Leave a Review" call to action. Garber Buick keeps its rating and testimonial videos.
+- Each page gets a meta title and description within Google's limits.
+
+Not pre-built: Garber Chevrolet Webster and Garber Subaru (now Parker Automotive, which uses different styling) and the two "(Overall)" campus rows. The Automall CDJR and Ford pages use the Automall campus photo; the Curtis Garber stores have no storefront photo yet, so their About page shows the original Garber building alone.

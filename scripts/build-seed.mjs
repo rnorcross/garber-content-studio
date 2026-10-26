@@ -1,6 +1,7 @@
 // One-time: turns the captured Garber Buick preview (seed/raw/garber-buick.json) into
 // four scoped, paste-ready fragments under seed/pages/. Kept for reference.
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { scopeCss, IMPORT_RE } from '../lib/css-scope.mjs';
 
 const raw = JSON.parse(readFileSync(new URL('../seed/raw/garber-buick.json', import.meta.url), 'utf8'));
@@ -51,6 +52,31 @@ const TYPES = { about: 'about', history: 'history', community: 'community', valu
 const LIVE = { about: 'https://www.garberbuick.com/about-garber-buick-dealership-in-saginaw-michigan.htm' };
 const manifest = [];
 
+// Embedded images become files in seed/assets/, referenced as gcs-asset://<file>.
+// The seed uploads each one once (Vercel Blob in production) and swaps in its URL.
+const assetsDir = new URL('../seed/assets/', import.meta.url);
+mkdirSync(assetsDir, { recursive: true });
+const assets = {};
+// images that belong to Garber Buick rather than the group (storefront, store logo, testimonial people)
+const BUICK_ONLY = ['f2f3700c', 'a3c9a766', 'f4ae99b7', '002531a4', '98b59a06', '590513c2', '87beb801'];
+function extractAssets(html) {
+  return html.replace(/data:image\/([a-z+]+);base64,([A-Za-z0-9+/=]+)/g, (uri, type, b64) => {
+    const md5 = createHash('md5').update(uri).digest('hex');
+    const ext = type.replace('jpeg', 'jpg').replace('svg+xml', 'svg');
+    const file = `${createHash('sha1').update(b64).digest('hex').slice(0, 16)}.${ext}`;
+    if (!assets[file]) {
+      writeFileSync(new URL(file, assetsDir), Buffer.from(b64, 'base64'));
+      assets[file] = { type: `image/${type}`, dealership: BUICK_ONLY.includes(md5.slice(0, 8)) ? 'garber-buick' : null, alt: null };
+    }
+    const at = html.indexOf(uri);
+    const tagStart = html.lastIndexOf('<img', at);
+    const tag = tagStart >= 0 && html.lastIndexOf('>', at) < tagStart ? html.slice(tagStart, html.indexOf('>', at + uri.length) + 1) : '';
+    const alt = tag.match(/alt="([^"]+)"/)?.[1];
+    if (alt && !assets[file].alt) assets[file].alt = alt.replace(/&amp;/g, '&');
+    return `gcs-asset://${file}`;
+  });
+}
+
 for (const p of raw.pages) {
   const scope = `gcs-garber-buick-${TYPES[p.id]}`;
   let body = p.html
@@ -65,7 +91,7 @@ for (const p of raw.pages) {
     `<div class="${scope}">\n${body}${hasVideo ? VIDEO(scope) : ''}\n</div>`,
   ].filter(Boolean);
   const file = `garber-buick-${p.id}.html`;
-  writeFileSync(new URL(file, out), parts.join('\n'));
+  writeFileSync(new URL(file, out), extractAssets(parts.join('\n')));
   manifest.push({
     file, dealership: 'garber-buick', title: `Garber Buick — ${p.title}`, pageType: TYPES[p.id], liveUrl: LIVE[p.id] ?? null,
     notes: 'Imported from the Garber Buick preview site. Images are embedded from the preview; swap in the hosted assets.garberauto.com URLs from the Images tab.'
@@ -73,4 +99,6 @@ for (const p of raw.pages) {
   });
 }
 writeFileSync(new URL('manifest.json', out), JSON.stringify(manifest, null, 2));
+writeFileSync(new URL('manifest.json', assetsDir), JSON.stringify(assets, null, 2));
+console.log(`${Object.keys(assets).length} images → seed/assets/`);
 console.log(manifest.map((m) => m.file).join('\n'));
