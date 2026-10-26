@@ -18,7 +18,9 @@ export default function Login() {
 
   return (
     <main className="login">
-      <form className="card stack" onSubmit={submit}>
+      <form className="stack" onSubmit={submit} style={{ width: '100%', maxWidth: 400 }}>
+        <img src="/garber-logo-white.png" alt="Garber Automotive Group" />
+        <div className="card stack" style={{ padding: 32 }}>
         <div>
           <div className="eyebrow">Garber Automotive Group</div>
           <h1 className="title" style={{ marginTop: 6 }}>Content Studio</h1>
@@ -34,6 +36,7 @@ export default function Login() {
         </div>
         {error && <p className="err" role="alert">{error}</p>}
         <button className="btn primary" type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+        </div>
       </form>
     </main>
   );

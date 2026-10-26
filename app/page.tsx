@@ -36,6 +36,20 @@ export default async function Library({ searchParams }: { searchParams: Promise<
   const [{ stale }] = await sql<{ stale: number }[]>`
     select count(*)::int as stale from pages where live_version is not null and current_version <> live_version and status <> 'archived'`;
 
+  const [k] = await sql<{ total: number; live: number; drafts: number; dealers: number }[]>`
+    select count(*) filter (where status <> 'archived')::int as total,
+      count(*) filter (where status <> 'archived' and live_version is not null and current_version = live_version)::int as live,
+      count(*) filter (where status <> 'archived' and live_version is null)::int as drafts,
+      count(distinct dealership_id) filter (where status <> 'archived')::int as dealers
+    from pages`;
+  const stats: [string, number, string][] = [
+    ['Pages', k.total, 'var(--ink)'],
+    ['Live & current', k.live, 'var(--ok)'],
+    ['Re-paste needed', stale, stale ? 'var(--warn)' : 'var(--ink)'],
+    ['Drafts', k.drafts, 'var(--blue)'],
+    ['Dealerships covered', k.dealers, 'var(--purple)'],
+  ];
+
   const filters = [['', 'All'], ['stale', `Re-paste needed${stale ? ` (${stale})` : ''}`], ['live', 'Live'], ['draft', 'Drafts'], ['archived', 'Archived']];
 
   return (
@@ -49,6 +63,15 @@ export default async function Library({ searchParams }: { searchParams: Promise<
             <p className="sub">Every page we build for the dealer sites, with its history and what’s live.</p>
           </div>
           <Link className="btn primary" href="/new">New page</Link>
+        </div>
+
+        <div className="stats">
+          {stats.map(([label, n, color]) => (
+            <div key={label} className="card stat">
+              <div className="eyebrow">{label}</div>
+              <div className="stat-num" style={{ color }}>{n.toLocaleString()}</div>
+            </div>
+          ))}
         </div>
 
         {stale > 0 && !status && (
