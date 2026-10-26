@@ -8,6 +8,9 @@ export async function POST(req: Request) {
   const p = String(password || '');
   if (!e || !p) return fail('Enter your email and password');
 
+  const [ready] = await sql<{ ok: boolean }[]>`select to_regclass('public.users') is not null as ok`;
+  if (!ready.ok) return fail('The app isn’t set up yet. Open /setup to finish setup.', 503);
+
   const [row] = await sql<(SessionUser & { password_hash: string; must_reset: boolean })[]>`
     select id, email, name, role, password_hash, must_reset from users where email = ${e}`;
 

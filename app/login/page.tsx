@@ -34,8 +34,9 @@ export default function Login() {
           <label htmlFor="pw">Password</label>
           <input id="pw" className="input" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         </div>
-        {error && <p className="err" role="alert">{error}</p>}
+        {error && <p className="err" role="alert">{error}{error.includes('/setup') && <> <a href="/setup">Go to setup</a></>}</p>}
         <button className="btn primary" type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+        <a className="small muted" href="/setup" style={{ textAlign: 'center' }}>First time? Run setup</a>
         </div>
       </form>
     </main>

@@ -31,19 +31,8 @@ A small CMS for the HTML content the Garber marketing team embeds on dealership 
    | `ADMIN_NAME` | Optional, e.g. `Robert Norcross` |
    | `ANTHROPIC_MODEL` | Optional, defaults to `claude-sonnet-5-5` |
 
-6. **Create tables and load content**, from this folder on any computer with Node 22+. Pull the project's environment variables first so the seed can reach Neon and Blob:
-
-   ```bash
-   npm install
-   npx vercel link          # pick the garber-content-studio project
-   npx vercel env pull .env.local
-   npm run db:migrate
-   npm run db:seed
-   ```
-
-   The seed loads the 34-store roster, the six starter templates, the 35 shared images (uploaded once to Blob), the four Garber Buick pages, and **a pre-built page for every template at every Garber dealership** — 150 pages across 30 stores. It's safe to run again: it only adds what's missing and never overwrites pages or templates edited in the app. Run `db:migrate` again after updates; it only adds what's missing.
-
-7. **Deploy** in Vercel, open the site, and sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`. The seed creates that admin account (signing in first also works). Change the password under **Account** afterwards. Add teammates from **Team**; each gets a temporary password and picks their own on first sign-in.
+6. **Load the content**: open `https://<your-app>.vercel.app/setup`, enter `ADMIN_EMAIL` / `ADMIN_PASSWORD`, and click **Run setup**. It creates the tables, your admin account, the 35 shared images (uploaded to Blob), and 150 pages — the four Garber Buick originals plus every template for every Garber dealership. Safe to run again; it only adds what's missing, and after the first run only a signed-in admin can run it. (The same thing from a terminal: `npx vercel env pull .env.local --environment=production`, then `npm run db:migrate && npm run db:seed`.)
+7. **Sign in** with `ADMIN_EMAIL` / `ADMIN_PASSWORD` and change the password under **Account**. Add teammates from **Team**; each gets a temporary password and picks their own on first sign-in.
 
 ## Local development
 
@@ -73,7 +62,7 @@ Without `BLOB_READ_WRITE_TOKEN` (local development), uploads are saved under `.d
 
 ## The pre-built dealership pages
 
-`scripts/dealer-pages.mjs` builds each store's version of the five templates from the Garber Buick originals:
+`lib/dealer-pages.mjs` builds each store's version of the five templates from the Garber Buick originals:
 
 - **Mission, Vision & Values, Community, History** are group-branded, so they keep the Buick content and get the store's links (inventory, service scheduler, careers) and a local closing line.
 - **About Us** gets the store's name, city, brands, white logo, storefront photo, links and Google reviews link, with copy that's true for every Garber store. Each page's notes list what to finish: the store's own story, and its Google rating, review count and reviews (marked in brackets).
