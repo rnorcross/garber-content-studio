@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 async function status() {
   const out = {
-    database: !!databaseUrl(), blob: !!process.env.BLOB_READ_WRITE_TOKEN, authSecret: (process.env.AUTH_SECRET ?? '').length >= 32,
+    onVercel: !!process.env.VERCEL, database: !!databaseUrl(), blob: !!process.env.BLOB_READ_WRITE_TOKEN, authSecret: (process.env.AUTH_SECRET ?? '').length >= 32,
     adminConfigured: !!(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD), claude: !!process.env.ANTHROPIC_API_KEY,
     tables: false, users: 0, pages: 0, dealerships: 0, error: null as string | null,
   };
@@ -39,6 +39,8 @@ export async function GET() {
 export async function POST(req: Request) {
   const s = await status();
   if (!s.database) return Response.json({ error: 'No database is connected. In Vercel, connect Neon under Storage, then redeploy.' }, { status: 400 });
+  // On Vercel the disk is read-only, so images must go to Blob.
+  if (process.env.VERCEL && !s.blob) return Response.json({ error: 'Image storage isn’t connected to this deployment yet. Connect a public Blob store under Storage, then redeploy.' }, { status: 400 });
   if (!s.authSecret) return Response.json({ error: 'AUTH_SECRET is missing or shorter than 32 characters. Add it in Vercel, then redeploy.' }, { status: 400 });
 
   if (s.users > 0) {

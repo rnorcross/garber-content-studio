@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 
 type Status = {
-  database: boolean; blob: boolean; authSecret: boolean; adminConfigured: boolean; claude: boolean;
+  onVercel: boolean; database: boolean; blob: boolean; authSecret: boolean; adminConfigured: boolean; claude: boolean;
   tables: boolean; users: number; pages: number; dealerships: number; error: string | null;
 };
 
@@ -38,7 +38,7 @@ export default function Setup() {
     ['ADMIN_EMAIL / ADMIN_PASSWORD', s.adminConfigured, 'Add both in Environment Variables, then redeploy.'],
     ['ANTHROPIC_API_KEY', s.claude, 'Optional for setup — needed for Generate and Ask Claude.'],
   ] : [];
-  const ready = !!s && s.database && s.authSecret && (s.users > 0 || s.adminConfigured);
+  const ready = !!s && s.database && s.authSecret && (s.users > 0 || s.adminConfigured) && (s.blob || !s.onVercel);
   const loaded = !!s && s.users > 0 && s.pages > 0;
 
   return (
