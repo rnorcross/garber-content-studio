@@ -95,7 +95,16 @@ EDITING RULES
 2. Change only what the instruction asks. Keep all other markup, copy, class names, CSS and scripts exactly as they are.
 3. Tokens of the form inline-image://N stand for embedded images. Keep each one exactly where it is unless the instruction says to replace that image.
 4. Keep the fragment paste-ready: no <html>/<head>/<body>, no site header or footer.${scope ? ` New CSS selectors must start with .${scope}.` : ''}
-5. Never invent facts, prices, names, reviews or statistics; missing information becomes a bracketed placeholder.`;
+5. Never invent facts, prices, names, reviews or statistics; missing information becomes a bracketed placeholder.
+6. The person may include OTHER PAGES from the Content Studio as source material. Copy text, reviews, images (including inline-image://N tokens) and markup from them when the instruction asks, but restyle what you bring over so it fits this page's existing design and scope class. Never change the other pages.`;
+}
+
+export type EditReference = { id: number; title: string; html: string };
+
+export function editUser(html: string, instruction: string, refs: EditReference[]) {
+  const sources = refs.map((r) =>
+    `OTHER PAGE #${r.id} — "${r.title}" (source material only; do not return this page):\n${r.html}`).join('\n\n');
+  return `${sources ? `${sources}\n\n` : ''}CURRENT FRAGMENT (the page to edit and return):\n${html}\n\nINSTRUCTION:\n${instruction}\n\nReturn the complete revised CURRENT FRAGMENT.`;
 }
 
 /** Finds the wrapper class a fragment is scoped to, if any. */

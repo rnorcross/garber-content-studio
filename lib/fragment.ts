@@ -40,8 +40,7 @@ export function replaceAll(html: string, from: string, to: string) {
  * Swaps every data: URI for a short token so the HTML can be shown in a code
  * editor or sent to Claude without megabytes of base64. restoreInline puts them back.
  */
-export function stashInline(html: string) {
-  const store: string[] = [];
+export function stashInline(html: string, store: string[] = []) {
   const out = html.replace(/data:[a-z]+\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=\s]+/gi, (m) => {
     const i = store.indexOf(m);
     const idx = i >= 0 ? i : store.push(m) - 1;

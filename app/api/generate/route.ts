@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { sql, type Dealership } from '@/lib/db';
 import { getUser } from '@/lib/auth';
-import { MODEL, createSystem, createUser, editSystem, detectScope, type MediaHint } from '@/lib/prompt';
+import { MODEL, createSystem, createUser, editSystem, editUser, detectScope, type EditReference, type MediaHint } from '@/lib/prompt';
 import { stashInline, slugify } from '@/lib/fragment';
 import { getTemplate } from '@/lib/templates';
 
@@ -10,7 +10,7 @@ export const maxDuration = 300;
 /**
  * Streams HTML from Claude.
  *  mode "create": { dealershipId, templateSlug, title, prompt, fields, referencePageId }
- *  mode "edit":   { html, instruction }  — html may contain inline-image://N tokens; the client restores them.
+ *  mode "edit":   { html, instruction, references?: [{ id, title, html }] }  — html may contain inline-image://N tokens; the client restores them.
  */
 export async function POST(req: Request) {
   const user = await getUser();
@@ -27,7 +27,11 @@ export async function POST(req: Request) {
     const instruction = String(b.instruction || '').trim();
     if (!html || !instruction) return new Response('Need the page HTML and an instruction', { status: 400 });
     system = editSystem(detectScope(html));
-    userMsg = `CURRENT FRAGMENT:\n${html}\n\nINSTRUCTION:\n${instruction}\n\nReturn the complete revised fragment.`;
+    // other pages the person pointed at (the client fetches and stashes them so image tokens line up)
+    const refs: EditReference[] = (Array.isArray(b.references) ? b.references : []).slice(0, 3).map((r: any) => ({
+      id: Number(r.id), title: String(r.title || ''), html: String(r.html || '').slice(0, 120_000),
+    })).filter((r: EditReference) => r.id && r.html);
+    userMsg = editUser(html, instruction, refs);
   } else {
     const dealershipId = b.dealershipId ? Number(b.dealershipId) : null;
     const [d] = dealershipId ? await sql<Dealership[]>`select * from dealerships where id = ${dealershipId}` : [];

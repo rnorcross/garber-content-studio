@@ -21,6 +21,10 @@ export default async function PageEditor({ params }: { params: Promise<{ id: str
   const dealers = await sql<{ id: number; name: string; slug: string; og_image: string | null; website: string | null }[]>`
     select id, name, slug, og_image, website from dealerships order by sort, name`;
   const templates = (await listTemplates(true)).map((t) => ({ slug: t.slug, name: t.name, url_pattern: t.url_pattern }));
+  const otherPages = await sql<{ id: number; title: string; dealership: string | null }[]>`
+    select p.id, p.title, d.name as dealership from pages p left join dealerships d on d.id = p.dealership_id
+    where p.status <> 'archived' and p.id <> ${id}
+    order by (p.dealership_id is not distinct from ${page.dealership_id}) desc, d.sort, d.name, p.title`;
   const log = await sql<LiveEvent[]>`
     select id, page_id, version, live_url, note, user_name, created_at from live_events where page_id = ${id} order by created_at desc`;
 
@@ -33,6 +37,7 @@ export default async function PageEditor({ params }: { params: Promise<{ id: str
         dealers={dealers}
         templates={templates}
         initialLog={JSON.parse(JSON.stringify(log))}
+        otherPages={[...otherPages]}
       />
     </>
   );

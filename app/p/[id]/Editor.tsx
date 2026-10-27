@@ -33,9 +33,12 @@ const stamp = (s: string) => new Date(s).toLocaleString('en-US', { dateStyle: 'm
 type Props = {
   page: PageData; initialHtml: string; dealers: Dealer[]; templates: Tpl[];
   initialLog: LiveEvent[];
+  otherPages: OtherPage[];
 };
 
-export default function Editor({ page: initial, initialHtml, dealers, templates, initialLog }: Props) {
+export type OtherPage = { id: number; title: string; dealership: string | null };
+
+export default function Editor({ page: initial, initialHtml, dealers, templates, initialLog, otherPages }: Props) {
   const [page, setPage] = useState(initial);
   const [savedHtml, setSavedHtml] = useState(initialHtml);
   const [html, setHtml] = useState(initialHtml);
@@ -252,7 +255,7 @@ export default function Editor({ page: initial, initialHtml, dealers, templates,
             ))}
           </div>
           <div className="panel-body">
-            {tab === 'ask' && <AskPanel html={html} disabled={!!viewing || editing} onResult={(h, p) => change(h, 'ai-edit', p)} />}
+            {tab === 'ask' && <AskPanel html={html} pageId={page.id} pages={otherPages} disabled={!!viewing || editing} onResult={(h, p) => change(h, 'ai-edit', p)} />}
             {tab === 'code' && <CodePanel html={html} disabled={!!viewing || editing} onApply={(h) => change(h, 'edited')} />}
             {tab === 'images' && <ImagesPanel html={html} dealer={dealer} disabled={!!viewing || editing} onChange={(h) => change(h, 'edited')} flash={flash} />}
             {tab === 'versions' && (
@@ -309,22 +312,41 @@ export default function Editor({ page: initial, initialHtml, dealers, templates,
   );
 }
 
-function AskPanel({ html, disabled, onResult }: { html: string; disabled: boolean; onResult: (html: string, prompt: string) => void }) {
+function AskPanel({ html, pageId, pages, disabled, onResult }: {
+  html: string; pageId: number; pages: OtherPage[]; disabled: boolean; onResult: (html: string, prompt: string) => void;
+}) {
   const [instruction, setInstruction] = useState('');
+  const [sources, setSources] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
+  const [warning, setWarning] = useState('');
   const abort = useRef<AbortController | null>(null);
+
+  // pages linked in the instruction (…/p/51) plus any picked below
+  const linked = [...instruction.matchAll(/\/p\/(\d+)\b/g)].map((m) => Number(m[1]));
+  const refIds = [...new Set([...sources, ...linked])].filter((id) => id !== pageId).slice(0, 3);
+  const nameOf = (id: number) => pages.find((p) => p.id === id)?.title ?? `Page ${id}`;
 
   async function ask() {
     if (!instruction.trim()) return;
-    setBusy(true); setError(''); setProgress(0);
+    setBusy(true); setError(''); setWarning(''); setProgress(0);
     abort.current = new AbortController();
-    const { html: compact, store } = stashInline(html);
     try {
-      const out = await streamHtml({ mode: 'edit', html: compact, instruction }, (t) => setProgress(Math.min(99, Math.round((t.length / compact.length) * 100))), abort.current.signal);
+      const { html: compact, store } = stashInline(html);
+      // one shared token store, so images copied from another page restore correctly
+      const references = [];
+      for (const id of refIds) {
+        const r = await api<{ id: number; title: string; html: string }>(`/api/pages/${id}/current`);
+        references.push({ id: r.id, title: r.title, html: stashInline(r.html, store).html });
+      }
+      const out = await streamHtml({ mode: 'edit', html: compact, instruction, references },
+        (t) => setProgress(Math.min(99, Math.round((t.length / compact.length) * 100))), abort.current.signal);
+      if (out.length < compact.length * 0.85 && !/\b(remove|delete|cut|shorten|trim|drop)\b/i.test(instruction)) {
+        setWarning(`Claude’s version is ${Math.round((1 - out.length / compact.length) * 100)}% shorter than before. Check the preview to make sure nothing was dropped before you save — you can always go back to an earlier version in History.`);
+      }
       onResult(restoreInline(out, store), instruction);
-      setInstruction('');
+      setInstruction(''); setSources([]);
     } catch (e) {
       if ((e as Error).name !== 'AbortError') setError((e as Error).message);
     } finally { setBusy(false); }
@@ -343,8 +365,27 @@ function AskPanel({ html, disabled, onResult }: { html: string; disabled: boolea
       <div className="row" style={{ gap: 6 }}>
         {SUGGESTIONS.map((s) => <button key={s} className="btn sm ghost" style={{ border: '1px solid var(--line)' }} disabled={disabled || busy} onClick={() => setInstruction(s)}>{s}</button>)}
       </div>
+      <div className="field">
+        <label htmlFor="src">Pull content from another page (optional)</label>
+        <select id="src" className="select" value="" disabled={disabled || busy || refIds.length >= 3}
+          onChange={(e) => e.target.value && setSources([...sources, Number(e.target.value)])}>
+          <option value="">Choose a page…</option>
+          {pages.filter((p) => p.id !== pageId && !refIds.includes(p.id)).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+        </select>
+        {refIds.length > 0 && (
+          <div className="row" style={{ gap: 6 }}>
+            {refIds.map((id) => (
+              <span key={id} className="chip">{nameOf(id)}
+                {sources.includes(id) && <button className="btn sm ghost" style={{ padding: '0 4px', marginLeft: 4 }} aria-label="Remove" onClick={() => setSources(sources.filter((s) => s !== id))}>×</button>}
+              </span>
+            ))}
+          </div>
+        )}
+        <span className="hint">Claude can read these pages and copy sections, reviews or images from them into this one. Pasting a page link (…/p/51) works too.</span>
+      </div>
       {busy && <div className="stack" style={{ gap: 6 }}><div className="progress"><i /></div><span className="small muted">Rewriting… about {progress}%</span></div>}
       {error && <p className="err">{error}</p>}
+      {warning && <div className="notice warn">{warning}</div>}
       <div className="row">
         {busy ? <button className="btn" onClick={() => abort.current?.abort()}>Stop</button>
           : <button className="btn primary" onClick={ask} disabled={disabled || !instruction.trim()}>Make the change</button>}
