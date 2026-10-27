@@ -7,7 +7,7 @@ import { formatBytes } from '@/lib/fragment';
 type Dealer = { id: number; name: string; slug: string };
 
 export default function MediaLibrary({ dealers, initialDealer, mode, total, totalBytes }: {
-  dealers: Dealer[]; initialDealer: string; mode: 'blob' | 'local'; total: number; totalBytes: number;
+  dealers: Dealer[]; initialDealer: string; mode: 'blob' | 'blob-presigned' | 'local'; total: number; totalBytes: number;
 }) {
   const [filter, setFilter] = useState(initialDealer); // '' all, 'group', or dealer id
   const [q, setQ] = useState('');
@@ -72,7 +72,7 @@ export default function MediaLibrary({ dealers, initialDealer, mode, total, tota
           <h1 className="title">Images & video</h1>
           <p className="sub">
             {total.toLocaleString()} file{total === 1 ? '' : 's'} · {formatBytes(totalBytes)} ·{' '}
-            {mode === 'blob' ? 'stored in Vercel Blob, served from its global CDN' : 'local development storage (connect a Blob store on Vercel for production)'}
+            {mode !== 'local' ? 'stored in Vercel Blob, served from its global CDN' : 'local development storage (connect a Blob store on Vercel for production)'}
           </p>
         </div>
         <button className="btn primary" onClick={() => fileRef.current?.click()}>Upload</button>

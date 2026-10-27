@@ -1,5 +1,5 @@
 'use client';
-import { upload } from '@vercel/blob/client';
+import { upload, uploadPresigned } from '@vercel/blob/client';
 
 export type Media = {
   id: number; url: string; pathname: string; filename: string; content_type: string | null; size: number | null;
@@ -9,7 +9,7 @@ export type Media = {
 
 const MAX_EDGE = 2400; // photos larger than this are scaled down before upload
 
-let mode: Promise<'blob' | 'local'> | null = null;
+let mode: Promise<'blob' | 'blob-presigned' | 'local'> | null = null;
 function storageMode() {
   mode ??= fetch('/api/media?mode=1').then((r) => r.json()).then((d) => d.mode);
   return mode;
@@ -67,7 +67,8 @@ export async function uploadMedia(
     return d;
   }
 
-  const blob = await upload(`${folder}/${safe(file.name)}`, file, {
+  const send = (await storageMode()) === 'blob-presigned' ? uploadPresigned : upload;
+  const blob = await send(`${folder}/${safe(file.name)}`, file, {
     access: 'public',
     handleUploadUrl: '/api/media/upload',
     contentType: file.type,

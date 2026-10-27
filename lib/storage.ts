@@ -4,12 +4,16 @@ import { del } from '@vercel/blob';
 
 /**
  * Where uploaded images live.
- *  - On Vercel: Vercel Blob (BLOB_READ_WRITE_TOKEN is added when you connect a Blob store).
+ *  - On Vercel: Vercel Blob. Newer stores authenticate with OIDC + BLOB_STORE_ID; older ones
+ *    with BLOB_READ_WRITE_TOKEN. Both are added when you connect a Blob store.
  *    Files are durable, served from a global CDN, and get permanent public URLs.
  *  - Local development without a token: files are written under .data/uploads and served
  *    by /api/media/file/… so the app works offline.
  */
-export const storageMode = () => (process.env.BLOB_READ_WRITE_TOKEN ? 'blob' : 'local') as 'blob' | 'local';
+export const hasBlob = () => !!(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN);
+/** 'blob-presigned' = newer stores (OIDC + BLOB_STORE_ID); 'blob' = read-write token; 'local' = dev disk. */
+export const storageMode = () =>
+  (process.env.BLOB_STORE_ID ? 'blob-presigned' : process.env.BLOB_READ_WRITE_TOKEN ? 'blob' : 'local') as 'blob' | 'blob-presigned' | 'local';
 
 const LOCAL_ROOT = path.join(process.cwd(), '.data', 'uploads');
 
@@ -39,7 +43,7 @@ export function localPath(rel: string) {
 export async function removeStored(url: string, pathname: string) {
   if (url.startsWith('/api/media/file/')) {
     await unlink(localPath(pathname)).catch(() => {});
-  } else if (storageMode() === 'blob') {
+  } else if (hasBlob()) {
     await del(url);
   }
 }

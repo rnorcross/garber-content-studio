@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 async function status() {
   const out = {
-    onVercel: !!process.env.VERCEL, database: !!databaseUrl(), blob: !!process.env.BLOB_READ_WRITE_TOKEN, authSecret: (process.env.AUTH_SECRET ?? '').length >= 32,
+    onVercel: !!process.env.VERCEL, database: !!databaseUrl(), blob: !!(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN), authSecret: (process.env.AUTH_SECRET ?? '').length >= 32,
     adminConfigured: !!(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD), claude: !!process.env.ANTHROPIC_API_KEY,
     tables: false, users: 0, pages: 0, dealerships: 0, error: null as string | null,
   };
