@@ -36,7 +36,8 @@
         "type": "textarea",
         "placeholder": "URLs for this store's Community, Mission and History pages, if they exist."
       }
-    ]
+    ],
+    "url_pattern": "/dealership/about.htm"
   },
   {
     "slug": "mission",
@@ -52,7 +53,8 @@
         "type": "textarea",
         "placeholder": "A sentence or two tying the values to this store or community."
       }
-    ]
+    ],
+    "url_pattern": "/{dealer}-mission-vision-values.htm"
   },
   {
     "slug": "reviews",
@@ -85,7 +87,8 @@
         "type": "textarea",
         "placeholder": "Name — video URL (MP4 or YouTube), one per line."
       }
-    ]
+    ],
+    "url_pattern": "/{dealer}-dealership-reviews.htm"
   },
   {
     "slug": "community",
@@ -111,7 +114,8 @@
         "label": "Sponsorship request link (optional)",
         "type": "text"
       }
-    ]
+    ],
+    "url_pattern": "/{dealer}-commitment-to-community.htm"
   },
   {
     "slug": "history",
@@ -131,7 +135,8 @@
         "label": "Historical photo URLs (optional)",
         "type": "textarea"
       }
-    ]
+    ],
+    "url_pattern": "/{dealer}-history-of-our-dealership.htm"
   },
   {
     "slug": "custom",

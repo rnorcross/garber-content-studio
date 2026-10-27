@@ -111,3 +111,6 @@ create table if not exists media (
   created_at     timestamptz not null default now()
 );
 create index if not exists media_dealership_idx on media(dealership_id, created_at desc);
+
+-- v3: standard page address per template ({dealer} = dealership name, lowercase-with-dashes)
+alter table templates add column if not exists url_pattern text;

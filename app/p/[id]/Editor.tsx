@@ -10,10 +10,12 @@ import {
   assemble, dataUriToFile, defaultOgImage, formatBytes, GROUP_OG_IMAGE, listImages, replaceAll, restoreInline, slugify, stashInline,
 } from '@/lib/fragment';
 import type { Page, LiveEvent } from '@/lib/db';
+import { standardUrl, standardPath, matchesStandard } from '@/lib/urls.mjs';
 
 type PageData = Page & { dealership: string | null; dslug: string | null; live_by: string | null };
 type Dealer = { id: number; name: string; slug: string; og_image: string | null; website: string | null };
 type VersionMeta = { number: number; source: string; note: string | null; prompt: string | null; created_at: string; size: number; author: string | null };
+type Tpl = { slug: string; name: string; url_pattern: string | null };
 type Tab = 'ask' | 'code' | 'images' | 'versions' | 'details';
 
 const SOURCE_LABEL: Record<string, string> = {
@@ -29,7 +31,7 @@ const when = (s: string) => new Date(s).toLocaleString('en-US', { month: 'short'
 const stamp = (s: string) => new Date(s).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
 
 type Props = {
-  page: PageData; initialHtml: string; dealers: Dealer[]; templates: { slug: string; name: string }[];
+  page: PageData; initialHtml: string; dealers: Dealer[]; templates: Tpl[];
   initialLog: LiveEvent[];
 };
 
@@ -108,7 +110,8 @@ export default function Editor({ page: initial, initialHtml, dealers, templates,
   }
 
   function openLive(version = page.current_version ?? 1) {
-    setLiveForm({ version, url: page.live_url ?? '', note: '' });
+    const std = standardUrl(templates.find((t) => t.slug === page.page_type)?.url_pattern ?? null, dealer);
+    setLiveForm({ version, url: page.live_url || std || '', note: '' });
   }
   async function recordLive() {
     if (!liveForm) return;
@@ -461,7 +464,7 @@ function ImagesPanel({ html, dealer, disabled, onChange, flash }: {
 }
 
 function DetailsPanel({ page, dealers, templates, html, ogImage, onPage, onScoped, flash, setError }: {
-  page: PageData; dealers: Dealer[]; templates: { slug: string; name: string }[]; html: string; ogImage: string;
+  page: PageData; dealers: Dealer[]; templates: Tpl[]; html: string; ogImage: string;
   onPage: (fn: (p: PageData) => PageData) => void; onScoped: (html: string) => void;
   flash: (m: string) => void; setError: (m: string) => void;
 }) {
@@ -473,6 +476,10 @@ function DetailsPanel({ page, dealers, templates, html, ogImage, onPage, onScope
   const [busy, setBusy] = useState(false);
   const scoped = /class="gcs-[a-z0-9-]+/.test(html);
   const dealer = dealers.find((d) => String(d.id) === f.dealershipId) ?? null;
+  const pattern = templates.find((t) => t.slug === f.pageType)?.url_pattern ?? null;
+  const std = standardUrl(pattern, dealer);
+  const stdPath = standardPath(pattern, dealer?.name);
+  const onStd = matchesStandard(f.liveUrl, pattern, dealer?.name);
 
   async function save(extra: Record<string, unknown> = {}) {
     setBusy(true); setError('');
@@ -509,7 +516,21 @@ function DetailsPanel({ page, dealers, templates, html, ogImage, onPage, onScope
           {templates.map((t) => <option key={t.slug} value={t.slug}>{t.name}</option>)}
         </select>
       </div>
-      <div className="field"><label htmlFor="lu">Live page URL</label><input id="lu" className="input" value={f.liveUrl} placeholder="https://…" onChange={(e) => setF({ ...f, liveUrl: e.target.value })} /></div>
+      <div className="field">
+        <label htmlFor="lu">Page URL on the dealer site</label>
+        <input id="lu" className="input" value={f.liveUrl} placeholder={std ?? 'https://…'} onChange={(e) => setF({ ...f, liveUrl: e.target.value })} />
+        {stdPath && (
+          <div className="stack" style={{ gap: 6 }}>
+            <span className="hint">Standard address for this template: <code>{stdPath}</code>. Create the page in Dealer.com at exactly this URL.</span>
+            <span className="row" style={{ gap: 6 }}>
+              {f.liveUrl && !onStd && <span className="chip warn">Doesn’t match the standard URL</span>}
+              {f.liveUrl && onStd && <span className="chip ok">Standard URL</span>}
+              {!onStd && std && <button className="btn sm" onClick={() => setF({ ...f, liveUrl: std })}>Use standard URL</button>}
+              <button className="btn sm ghost" onClick={async () => { if (await copyText(stdPath)) flash('URL path copied'); }}>Copy path</button>
+            </span>
+          </div>
+        )}
+      </div>
 
       <hr style={{ border: 0, borderTop: '1px solid var(--line)', width: '100%' }} />
       <SeoFields seo={seo} onChange={setSeo} html={html} dealershipId={dealer?.id ?? null} pageTitle={f.title}

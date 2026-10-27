@@ -5,6 +5,7 @@ import SeoFields, { type Seo } from '@/components/SeoFields';
 import { api, streamHtml } from '@/lib/client';
 import { toFragment, formatBytes, extractSocialMeta, defaultOgImage, GROUP_OG_IMAGE } from '@/lib/fragment';
 import type { Template } from '@/lib/templates';
+import { standardUrl } from '@/lib/urls.mjs';
 
 type Dealer = { id: number; name: string; slug: string; og_image: string | null; website: string | null };
 type Props = {
@@ -24,7 +25,7 @@ export default function NewPage({ dealers, pages, templates, initialDealer, init
   const [title, setTitle] = useState('');
   const [prompt, setPrompt] = useState('');
   const [refId, setRefId] = useState<string>(''); // '' = template default, '0' = none
-  const [liveUrl, setLiveUrl] = useState('');
+  const [liveUrlEdit, setLiveUrl] = useState<string | null>(null); // null = use the standard URL
   const [importHtml, setImportHtml] = useState('');
   const [seo, setSeo] = useState<Seo>({ metaTitle: '', metaDescription: '', canonical: tpl?.default_canonical ?? '' });
 
@@ -37,6 +38,8 @@ export default function NewPage({ dealers, pages, templates, initialDealer, init
   const abort = useRef<AbortController | null>(null);
 
   const dealer = dealers.find((d) => String(d.id) === dealerId) ?? null;
+  const stdUrl = standardUrl(tpl?.url_pattern ?? null, dealer);
+  const liveUrl = liveUrlEdit ?? stdUrl ?? '';
   const autoTitle = `${dealer?.name ?? 'Garber Automotive Group'} — ${tpl?.name ?? 'Custom page'}`;
   const ogImage = dealer ? dealer.og_image || defaultOgImage(dealer.slug) : GROUP_OG_IMAGE;
   const refDefault = tpl?.reference_page_id ? pages.find((p) => p.id === tpl.reference_page_id) : null;
@@ -223,8 +226,9 @@ export default function NewPage({ dealers, pages, templates, initialDealer, init
             <SeoFields seo={seo} onChange={setSeo} html={shown} dealershipId={dealer?.id ?? null} pageTitle={title || autoTitle}
               template={tpl?.name ?? 'Custom page'} ogImage={ogImage} siteName={dealer?.website ?? 'garberauto.com'} liveUrl={liveUrl} disabled={busy === 'meta'} />
             <div className="field">
-              <label htmlFor="live">Live page URL <span className="muted" style={{ textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+              <label htmlFor="live">Page URL on the dealer site</label>
               <input id="live" className="input" value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} placeholder={dealer?.website ? `${dealer.website}/…` : 'https://…'} />
+              {stdUrl && <span className="hint">Standard address for {tpl?.name}. Create the page in Dealer.com at this URL.{liveUrlEdit !== null && liveUrlEdit !== stdUrl && <> <button className="btn sm ghost" onClick={() => setLiveUrl(null)}>Use standard URL</button></>}</span>}
             </div>
 
             {error && <p className="err" role="alert">{error}</p>}

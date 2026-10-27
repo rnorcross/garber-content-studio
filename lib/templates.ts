@@ -4,7 +4,7 @@ import { slugify } from './fragment';
 export type TemplateField = { key: string; label: string; type: 'text' | 'textarea'; placeholder?: string };
 export type Template = {
   id: number; slug: string; name: string; description: string | null; brief: string; fields: TemplateField[];
-  reference_page_id: number | null; default_canonical: string | null; is_custom: boolean; active: boolean; sort: number;
+  reference_page_id: number | null; default_canonical: string | null; url_pattern: string | null; is_custom: boolean; active: boolean; sort: number;
 };
 
 export const listTemplates = (includeInactive = false) => sql<Template[]>`
@@ -32,6 +32,7 @@ export function cleanTemplate(b: Record<string, any>) {
       .filter((f: any) => f.key && f.label),
     reference_page_id: b.referencePageId ? Number(b.referencePageId) : null,
     default_canonical: b.defaultCanonical ? String(b.defaultCanonical).trim() : null,
+    url_pattern: b.urlPattern ? String(b.urlPattern).trim() : null,
     active: b.active !== false,
     sort: Number.isFinite(Number(b.sort)) ? Number(b.sort) : 100,
   };

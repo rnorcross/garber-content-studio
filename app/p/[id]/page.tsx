@@ -20,7 +20,7 @@ export default async function PageEditor({ params }: { params: Promise<{ id: str
     select html from page_versions where page_id = ${id} and number = ${page.current_version}`;
   const dealers = await sql<{ id: number; name: string; slug: string; og_image: string | null; website: string | null }[]>`
     select id, name, slug, og_image, website from dealerships order by sort, name`;
-  const templates = (await listTemplates(true)).map((t) => ({ slug: t.slug, name: t.name }));
+  const templates = (await listTemplates(true)).map((t) => ({ slug: t.slug, name: t.name, url_pattern: t.url_pattern }));
   const log = await sql<LiveEvent[]>`
     select id, page_id, version, live_url, note, user_name, created_at from live_events where page_id = ${id} order by created_at desc`;
 

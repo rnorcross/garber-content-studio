@@ -6,15 +6,15 @@ import type { Template, TemplateField } from '@/lib/templates';
 
 type Draft = {
   id?: number; name: string; description: string; brief: string; fields: TemplateField[];
-  referencePageId: string; defaultCanonical: string; active: boolean; sort: number; is_custom?: boolean;
+  referencePageId: string; defaultCanonical: string; urlPattern: string; active: boolean; sort: number; is_custom?: boolean;
 };
 
 const toDraft = (t: Template): Draft => ({
   id: t.id, name: t.name, description: t.description ?? '', brief: t.brief, fields: t.fields,
-  referencePageId: t.reference_page_id ? String(t.reference_page_id) : '', defaultCanonical: t.default_canonical ?? '',
+  referencePageId: t.reference_page_id ? String(t.reference_page_id) : '', defaultCanonical: t.default_canonical ?? '', urlPattern: t.url_pattern ?? '',
   active: t.active, sort: t.sort, is_custom: t.is_custom,
 });
-const blank = (sort: number): Draft => ({ name: '', description: '', brief: '', fields: [], referencePageId: '', defaultCanonical: '', active: true, sort });
+const blank = (sort: number): Draft => ({ name: '', description: '', brief: '', fields: [], referencePageId: '', defaultCanonical: '', urlPattern: '', active: true, sort });
 
 export default function Templates({ templates, pages, usage }: { templates: Template[]; pages: { id: number; title: string }[]; usage: Record<string, number> }) {
   const [list, setList] = useState(templates);
@@ -52,12 +52,13 @@ export default function Templates({ templates, pages, usage }: { templates: Temp
       <div className="editor" style={{ gridTemplateColumns: edit ? 'minmax(0, 1fr) minmax(0, 1.3fr)' : 'minmax(0, 1fr)' }}>
         <div className="card table-scroll">
           <table className="table">
-            <thead><tr><th>#</th><th>Template</th><th>Inputs</th><th>Pages</th><th></th></tr></thead>
+            <thead><tr><th>#</th><th>Template</th><th>Page URL</th><th>Inputs</th><th>Pages</th><th></th></tr></thead>
             <tbody>
               {list.map((t, i) => (
                 <tr key={t.id} style={{ opacity: t.active ? 1 : 0.5 }}>
                   <td className="small muted">{i + 1}</td>
                   <td><strong>{t.name}</strong>{!t.active && <span className="chip" style={{ marginLeft: 6 }}>Hidden</span>}<div className="small muted">{t.description}</div></td>
+                  <td className="small"><code>{t.url_pattern ?? '—'}</code></td>
                   <td className="small">{t.is_custom ? 'Prompt' : `${t.fields.length} field${t.fields.length === 1 ? '' : 's'}`}</td>
                   <td className="small">{usage[t.slug] ?? 0}</td>
                   <td style={{ textAlign: 'right' }}>
@@ -114,6 +115,11 @@ export default function Templates({ templates, pages, usage }: { templates: Temp
                 {pages.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
               </select>
               <span className="hint">Claude matches this page’s layout and components when building new pages from the template.</span>
+            </div>
+            <div className="field">
+              <label htmlFor="tu">Page URL on the dealer site</label>
+              <input id="tu" className="input" value={edit.urlPattern} onChange={(e) => setEdit({ ...edit, urlPattern: e.target.value })} placeholder="/{dealer}-page-name.htm" />
+              <span className="hint">{'{dealer}'} becomes the dealership name, e.g. Garber Buick → garber-buick. Every page from this template gets this address on its dealership’s website.</span>
             </div>
             <div className="field"><label htmlFor="tc">Default canonical URL</label><input id="tc" className="input" value={edit.defaultCanonical} onChange={(e) => setEdit({ ...edit, defaultCanonical: e.target.value })} placeholder="Optional — e.g. the group page these store pages duplicate" /></div>
             <label className="row small" style={{ gap: 8 }}>
