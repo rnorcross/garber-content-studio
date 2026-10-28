@@ -7,7 +7,7 @@ import MediaPicker from '@/components/MediaPicker';
 import { api, copyText, download, streamHtml } from '@/lib/client';
 import { uploadMedia, absolute } from '@/lib/upload';
 import {
-  assemble, dataUriToFile, defaultOgImage, formatBytes, GROUP_OG_IMAGE, listImages, replaceAll, restoreInline, slugify, stashInline,
+  assemble, dataUriToFile, extractSocialMeta, defaultOgImage, formatBytes, GROUP_OG_IMAGE, listImages, replaceAll, restoreInline, slugify, stashInline,
 } from '@/lib/fragment';
 import type { Page, LiveEvent } from '@/lib/db';
 import { standardUrl, standardPath, matchesStandard } from '@/lib/urls.mjs';
@@ -400,8 +400,40 @@ function CodePanel({ html, disabled, onApply }: { html: string; disabled: boolea
   const [code, setCode] = useState(stash.html);
   useEffect(() => setCode(stash.html), [stash.html]);
   const changed = code !== stash.html;
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [fileMsg, setFileMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Loads an edited copy of this page (e.g. one Claude edited in chat) straight into the preview.
+  async function loadFile(f: File) {
+    let text = await f.text();
+    const body = text.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    if (body) {
+      // a full document: keep the head's styles and fonts plus the body
+      const head = (text.match(/<head[^>]*>([\s\S]*?)<\/head>/i)?.[1] ?? '').match(/<(style|link)\b[\s\S]*?(<\/style>|>)/gi) ?? [];
+      text = [...head.filter((t) => !/rel=["']?(canonical|icon)/i.test(t)), body[1]].join('\n');
+    }
+    text = extractSocialMeta(text).html.trim();
+    if (!/<[a-z]/i.test(text)) { setFileMsg({ ok: false, text: 'That file doesn’t contain any HTML.' }); return; }
+    const scope = (h: string) => h.match(/class="(gcs-[a-z0-9-]+)/)?.[1];
+    const mine = scope(html), theirs = scope(text);
+    onApply(text);
+    setFileMsg(mine && theirs && mine !== theirs
+      ? { ok: false, text: `Loaded ${f.name}, but it looks like it’s from a different page (${theirs}). Check the preview, and Discard if it’s wrong.` }
+      : { ok: true, text: `Loaded ${f.name} into the preview. Check it, then Save as a new version.` });
+  }
+
   return (
     <div className="stack">
+      <div className="card card-pad stack" style={{ gap: 8, background: 'var(--soft, #f5f6fb)' }}>
+        <strong className="small">Edited this page somewhere else?</strong>
+        <span className="small muted">Download the page (top right), have Claude edit it in chat, then load the file it gives back. It replaces this page in the preview — nothing is saved until you click Save.</span>
+        <div className="row">
+          <button className="btn sm" disabled={disabled} onClick={() => fileRef.current?.click()}>Load an edited file…</button>
+          <input ref={fileRef} type="file" accept=".html,.htm,.txt,text/html" hidden
+            onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ''; if (f) loadFile(f); }} />
+        </div>
+        {fileMsg && <div className={`notice ${fileMsg.ok ? 'ok' : 'warn'}`}>{fileMsg.text}</div>}
+      </div>
       {stash.store.length > 0 && <p className="small muted">{stash.store.length} embedded image{stash.store.length > 1 ? 's are' : ' is'} shown as <code>inline-image://N</code> to keep this readable. Leave those tokens in place.</p>}
       <p className="small muted">Social tags aren’t stored in the page; they’re added from the Details tab when you copy.</p>
       <textarea className="textarea code" style={{ minHeight: 'calc(100vh - 420px)' }} value={code} disabled={disabled}
