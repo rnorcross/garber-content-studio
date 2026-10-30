@@ -414,6 +414,13 @@ function CodePanel({ html, disabled, onApply }: { html: string; disabled: boolea
     }
     text = extractSocialMeta(text).html.trim();
     if (!/<[a-z]/i.test(text)) { setFileMsg({ ok: false, text: 'That file doesn’t contain any HTML.' }); return; }
+    // library image references -> hosted links
+    if (text.includes('gcs-asset://')) {
+      const lib = await api<Record<string, string>>('/api/media/library').catch(() => ({} as Record<string, string>));
+      const missing = new Set<string>();
+      text = text.replace(/gcs-asset:\/\/([a-z0-9]+\.[a-z0-9]+)/g, (m, f) => lib[f] ?? (missing.add(f), m));
+      if (missing.size) { setFileMsg({ ok: false, text: `${missing.size} image${missing.size > 1 ? 's' : ''} in that file aren’t in the media library (${[...missing].slice(0, 3).join(', ')}). Run Setup again, then load the file.` }); return; }
+    }
     const scope = (h: string) => h.match(/class="(gcs-[a-z0-9-]+)/)?.[1];
     const mine = scope(html), theirs = scope(text);
     onApply(text);
