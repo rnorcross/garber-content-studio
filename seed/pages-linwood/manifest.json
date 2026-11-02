@@ -1,0 +1,11 @@
+{
+  "dealership": "garber-chevrolet-linwood",
+  "versionNote": "Garber Chevrolet Linwood pages with reviews and testimonials (Nov 2026)",
+  "pages": [
+    { "file": "about.html", "title": "Garber Chevrolet Linwood About Us", "pageType": "about", "liveUrl": "https://www.garberlinwood.com/dealership/about.htm" },
+    { "file": "reviews.html", "title": "Garber Chevrolet Linwood Dealership Reviews", "pageType": "reviews", "liveUrl": "https://www.garberlinwood.com/garber-chevrolet-linwood-dealership-reviews.htm" },
+    { "file": "history.html", "title": "Garber Chevrolet Linwood History of Our Dealership", "pageType": "history", "liveUrl": "https://www.garberlinwood.com/garber-chevrolet-linwood-history-of-our-dealership.htm" },
+    { "file": "community.html", "title": "Garber Chevrolet Linwood Commitment to Community", "pageType": "community", "liveUrl": "https://www.garberlinwood.com/garber-chevrolet-linwood-commitment-to-community.htm" },
+    { "file": "mission.html", "title": "Garber Chevrolet Linwood Mission Vision Values", "pageType": "mission", "liveUrl": "https://www.garberlinwood.com/garber-chevrolet-linwood-mission-vision-values.htm" }
+  ]
+}
