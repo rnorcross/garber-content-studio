@@ -49,7 +49,7 @@ export default function Editor({ page: initial, initialHtml, dealers, templates,
   const [device, setDevice] = useState<Device>('desktop');
   const [editing, setEditing] = useState(false);
   const [textDirty, setTextDirty] = useState(false);
-  const [tab, setTab] = useState<Tab>('ask');
+  const [tab, setTab] = useState<Tab>('details');
   const [note, setNote] = useState('');
   const [toast, setToast] = useState('');
   const [error, setError] = useState('');
@@ -250,7 +250,7 @@ export default function Editor({ page: initial, initialHtml, dealers, templates,
 
         <aside className="card panel" aria-label="Tools">
           <div className="tabs" role="tablist">
-            {([['ask', 'Ask Claude'], ['code', 'Code'], ['images', 'Images'], ['versions', 'History'], ['details', 'Details']] as [Tab, string][]).map(([t, l]) => (
+            {([['details', 'Details'], ['versions', 'History'], ['code', 'Code'], ['ask', 'Ask Claude'], ['images', 'Images']] as [Tab, string][]).map(([t, l]) => (
               <button key={t} role="tab" aria-selected={tab === t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>{l}</button>
             ))}
           </div>

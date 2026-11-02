@@ -2,10 +2,35 @@
   "dealership": "garber-chevrolet-midland",
   "versionNote": "Garber Chevrolet Midland pages with reviewer notes (Nov 2026)",
   "pages": [
-    { "file": "about.html", "title": "Garber Chevrolet Midland — About Us", "pageType": "about", "liveUrl": "https://www.garbermidland.com/dealership/about.htm" },
-    { "file": "reviews.html", "title": "Garber Chevrolet Midland — Reviews", "pageType": "reviews", "liveUrl": "https://www.garbermidland.com/garber-chevrolet-midland-dealership-reviews.htm" },
-    { "file": "history.html", "title": "Garber Chevrolet Midland — Our History", "pageType": "history", "liveUrl": "https://www.garbermidland.com/garber-chevrolet-midland-history-of-our-dealership.htm" },
-    { "file": "community.html", "title": "Garber Chevrolet Midland — Community", "pageType": "community", "liveUrl": "https://www.garbermidland.com/garber-chevrolet-midland-commitment-to-community.htm" },
-    { "file": "mission.html", "title": "Garber Chevrolet Midland — Mission, Vision & Values", "pageType": "mission", "liveUrl": "https://www.garbermidland.com/garber-chevrolet-midland-mission-vision-values.htm" }
+    {
+      "file": "about.html",
+      "title": "Garber Chevrolet Midland About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garbermidland.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Chevrolet Midland Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garbermidland.com/garber-chevrolet-midland-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Chevrolet Midland History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garbermidland.com/garber-chevrolet-midland-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Chevrolet Midland Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garbermidland.com/garber-chevrolet-midland-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Chevrolet Midland Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garbermidland.com/garber-chevrolet-midland-mission-vision-values.htm"
+    }
   ]
 }

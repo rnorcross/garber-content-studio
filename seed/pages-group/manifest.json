@@ -1,9 +1,29 @@
 {
   "versionNote": "garberauto.com page with reviewer notes (Nov 2026)",
   "pages": [
-    { "file": "about.html", "title": "Garber Automotive Group — About Us", "pageType": "about", "liveUrl": "https://www.garberauto.com/dealership/about.htm" },
-    { "file": "history.html", "title": "Garber Automotive Group — Our History", "pageType": "history", "liveUrl": "https://www.garberauto.com/history-of-garber-automotive-group.htm" },
-    { "file": "community.html", "title": "Garber Automotive Group — Community", "pageType": "community", "liveUrl": "https://www.garberauto.com/garber-automotive-group-commitment-to-community.htm" },
-    { "file": "mission.html", "title": "Garber Automotive Group — Mission, Vision & Values", "pageType": "mission", "liveUrl": "https://www.garberauto.com/garber-automotive-group-mission-vision-and-values.htm" }
+    {
+      "file": "about.html",
+      "title": "Garber Automotive Group About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberauto.com/dealership/about.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Automotive Group History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberauto.com/history-of-garber-automotive-group.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Automotive Group Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberauto.com/garber-automotive-group-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Automotive Group Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberauto.com/garber-automotive-group-mission-vision-and-values.htm"
+    }
   ]
 }

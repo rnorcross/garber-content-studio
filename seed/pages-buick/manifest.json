@@ -2,9 +2,29 @@
   "dealership": "garber-buick",
   "versionNote": "Live garberbuick.com page with reviewer notes (Nov 2026)",
   "pages": [
-    { "file": "about.html", "title": "Garber Buick — About Us", "pageType": "about", "liveUrl": "https://www.garberbuick.com/dealership/about.htm" },
-    { "file": "history.html", "title": "Garber Buick — Our History", "pageType": "history", "liveUrl": "https://www.garberbuick.com/garber-buick-history-of-our-dealership.htm" },
-    { "file": "community.html", "title": "Garber Buick — Community", "pageType": "community", "liveUrl": "https://www.garberbuick.com/garber-buick-commitment-to-community.htm" },
-    { "file": "mission.html", "title": "Garber Buick — Mission, Vision & Values", "pageType": "mission", "liveUrl": "https://www.garberbuick.com/garber-buick-mission-vision-values.htm" }
+    {
+      "file": "about.html",
+      "title": "Garber Buick About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberbuick.com/dealership/about.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Buick History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberbuick.com/garber-buick-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Buick Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberbuick.com/garber-buick-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Buick Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberbuick.com/garber-buick-mission-vision-values.htm"
+    }
   ]
 }

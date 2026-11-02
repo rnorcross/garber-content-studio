@@ -5,7 +5,7 @@ import SeoFields, { type Seo } from '@/components/SeoFields';
 import { api, streamHtml } from '@/lib/client';
 import { toFragment, formatBytes, extractSocialMeta, defaultOgImage, GROUP_OG_IMAGE } from '@/lib/fragment';
 import type { Template } from '@/lib/templates';
-import { standardUrl } from '@/lib/urls.mjs';
+import { standardUrl, pageTitle } from '@/lib/urls.mjs';
 
 type Dealer = { id: number; name: string; slug: string; og_image: string | null; website: string | null };
 type Props = {
@@ -40,7 +40,7 @@ export default function NewPage({ dealers, pages, templates, initialDealer, init
   const dealer = dealers.find((d) => String(d.id) === dealerId) ?? null;
   const stdUrl = standardUrl(tpl?.url_pattern ?? null, dealer);
   const liveUrl = liveUrlEdit ?? stdUrl ?? '';
-  const autoTitle = `${dealer?.name ?? 'Garber Automotive Group'} — ${tpl?.name ?? 'Custom page'}`;
+  const autoTitle = pageTitle(dealer?.name ?? null, tpl?.slug ?? 'custom', tpl?.name ?? 'Custom page');
   const ogImage = dealer ? dealer.og_image || defaultOgImage(dealer.slug) : GROUP_OG_IMAGE;
   const refDefault = tpl?.reference_page_id ? pages.find((p) => p.id === tpl.reference_page_id) : null;
 
