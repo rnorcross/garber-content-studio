@@ -586,8 +586,8 @@ function DetailsPanel({ page, dealers, templates, html, ogImage, onPage, onScope
     <div className="stack">
       <div className="field">
         <label htmlFor="t">Title in the CMS</label>
+        {f.pageType === 'about' && <span className="hint" style={{ marginTop: -2 }}>Title already exists for this page.</span>}
         <input id="t" className="input" value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} />
-        {f.pageType === 'about' && <span className="hint">Title already exists for this page.</span>}
       </div>
       <div className="field"><label htmlFor="dl">Dealership</label>
         <select id="dl" className="select" value={f.dealershipId} onChange={(e) => setF({ ...f, dealershipId: e.target.value })}>
