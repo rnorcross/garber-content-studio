@@ -1,0 +1,24 @@
+{
+  "dealership": "garber-automall-overall",
+  "versionNote": "Garber Automall pages with reviewer notes applied (Nov 2026)",
+  "pages": [
+    { "file": "about.html", "title": "Garber Automall About Us", "pageType": "about", "liveUrl": "https://www.garberautomall.com/dealership/about.htm",
+      "metaTitle": "About Garber Automall | Green Cove Springs, FL Dealership",
+      "metaDescription": "Eight brands, one campus on U.S. 17. Since 1986 Garber Automall has served Clay County and Jacksonville with Chevrolet, Buick, GMC, Ford, Jeep, Ram and more." },
+    { "file": "reviews.html", "title": "Garber Automall Dealership Reviews", "pageType": "reviews", "liveUrl": "https://www.garberautomall.com/garber-automall-dealership-reviews.htm",
+      "metaTitle": "Garber Automall Reviews | Green Cove Springs, FL",
+      "metaDescription": "Read real Google reviews from Garber Automall customers in Green Cove Springs and see why Clay County drivers keep coming back for sales and service." },
+    { "file": "history.html", "title": "Garber Automall History of Our Dealership", "pageType": "history", "liveUrl": "https://www.garberautomall.com/garber-automall-history-of-our-dealership.htm",
+      "metaTitle": "Our History | Garber Automall, Green Cove Springs FL",
+      "metaDescription": "From Guy S. Garber's first Buick in 1907 to Garber Ford in Green Cove Springs in 1986 and the eight-brand Garber Automall today." },
+    { "file": "community.html", "title": "Garber Automall Commitment to Community", "pageType": "community", "liveUrl": "https://www.garberautomall.com/garber-automall-commitment-to-community.htm",
+      "metaTitle": "Community Involvement | Garber Automall, Clay County FL",
+      "metaDescription": "See how Garber Automall supports Clay County schools, the Clay County Fair and the causes every Garber store stands behind." },
+    { "file": "mission.html", "title": "Garber Automall Mission Vision Values", "pageType": "mission", "liveUrl": "https://www.garberautomall.com/garber-automall-mission-vision-values.htm",
+      "metaTitle": "Mission, Vision & Values | Garber Automall",
+      "metaDescription": "Do the right thing: the mission, vision and core values every Garber Automall team member is hired, trained and measured by." },
+    { "file": "mobile-repair-service.html", "title": "Garber Automall Mobile Repair Service", "pageType": "custom", "liveUrl": "https://www.garberautomall.com/mobile-repair-service.htm",
+      "metaTitle": "Mobile Repair Service | Garber Automall, Green Cove Springs",
+      "metaDescription": "Garber Automall's mobile service comes to your home or office in Clay County and the Jacksonville area. Schedule maintenance and repairs without the trip." }
+  ]
+}
