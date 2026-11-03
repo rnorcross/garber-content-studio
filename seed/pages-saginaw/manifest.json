@@ -1,0 +1,11 @@
+{
+  "dealership": "garber-chevrolet-saginaw",
+  "versionNote": "Garber Chevrolet Saginaw pages with Martin Chevrolet history, reviews and testimonials (Nov 2026)",
+  "pages": [
+    { "file": "about.html", "title": "Garber Chevrolet Saginaw About Us", "pageType": "about", "liveUrl": "https://www.garberchevroletsaginaw.com/dealership/about.htm" },
+    { "file": "reviews.html", "title": "Garber Chevrolet Saginaw Dealership Reviews", "pageType": "reviews", "liveUrl": "https://www.garberchevroletsaginaw.com/garber-chevrolet-saginaw-dealership-reviews.htm" },
+    { "file": "history.html", "title": "Garber Chevrolet Saginaw History of Our Dealership", "pageType": "history", "liveUrl": "https://www.garberchevroletsaginaw.com/garber-chevrolet-saginaw-history-of-our-dealership.htm" },
+    { "file": "community.html", "title": "Garber Chevrolet Saginaw Commitment to Community", "pageType": "community", "liveUrl": "https://www.garberchevroletsaginaw.com/garber-chevrolet-saginaw-commitment-to-community.htm" },
+    { "file": "mission.html", "title": "Garber Chevrolet Saginaw Mission Vision Values", "pageType": "mission", "liveUrl": "https://www.garberchevroletsaginaw.com/garber-chevrolet-saginaw-mission-vision-values.htm" }
+  ]
+}
