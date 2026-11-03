@@ -1,0 +1,46 @@
+{
+  "dealership": "garber-automall-ford",
+  "versionNote": "Garber Ford pages, unique store content (Nov 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Ford About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberford.net/dealership/about.htm",
+      "metaTitle": "About Garber Ford | Ford Dealer in Green Cove Springs, FL",
+      "metaDescription": "Garber Ford has served Clay County since 1986, the Garber family’s first store outside Michigan. New and used Ford trucks, SUVs and Broncos on U.S. 17."
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Ford Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberford.net/garber-ford-dealership-reviews.htm",
+      "metaTitle": "Garber Ford Reviews | Green Cove Springs, FL Ford Dealer",
+      "metaDescription": "Read Google reviews from Garber Ford customers and see why Clay County and Jacksonville drivers buy their F-150s, Broncos and Explorers here."
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Ford History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberford.net/garber-ford-history-of-our-dealership.htm",
+      "metaTitle": "Our History | Garber Ford, Green Cove Springs FL Since 1986",
+      "metaDescription": "From Guy S. Garber’s first Buick in 1907 to Garber Ford in Green Cove Springs in 1986: the store that took a Michigan family business to Florida."
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Ford Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberford.net/garber-ford-commitment-to-community.htm",
+      "metaTitle": "Community Involvement | Garber Ford, Green Cove Springs",
+      "metaDescription": "See how Garber Ford has supported Clay County teachers, the Clay County Fair and the causes every Garber store stands behind since 1986."
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Ford Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberford.net/garber-ford-mission-vision-values.htm",
+      "metaTitle": "Mission, Vision & Values | Garber Ford",
+      "metaDescription": "Do the right thing: the mission, vision and core values every Garber Ford team member is hired, trained and measured by."
+    }
+  ]
+}

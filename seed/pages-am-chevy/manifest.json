@@ -1,0 +1,46 @@
+{
+  "dealership": "garber-automall-gm",
+  "versionNote": "Garber Automall Chevrolet pages, unique store content (Nov 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Automall Chevrolet About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberautomallchevrolet.com/dealership/about.htm",
+      "metaTitle": "About Garber Automall Chevrolet | Green Cove Springs FL",
+      "metaDescription": "New and used Chevrolet on the Garber Automall campus on U.S. 17, backed by a family selling GM vehicles since 1907. Serving Clay County and Jacksonville."
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Automall Chevrolet Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberautomallchevrolet.com/garber-automall-chevrolet-dealership-reviews.htm",
+      "metaTitle": "Garber Automall Chevrolet Reviews | Green Cove Springs",
+      "metaDescription": "Read Google reviews from Garber Automall Chevrolet customers and see why Clay County and Jacksonville drivers keep coming back for Chevy sales and service."
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Automall Chevrolet History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberautomallchevrolet.com/garber-automall-chevrolet-history-of-our-dealership.htm",
+      "metaTitle": "Our History | Garber Automall Chevrolet, Green Cove Springs",
+      "metaDescription": "From Guy S. Garber’s start with GM in 1907 to Garber Automall Chevrolet on U.S. 17 today: the story of a family business that grew beyond Michigan."
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Automall Chevrolet Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberautomallchevrolet.com/garber-automall-chevrolet-commitment-to-community.htm",
+      "metaTitle": "Community Involvement | Garber Automall Chevrolet",
+      "metaDescription": "See how Garber Automall Chevrolet supports Clay County teachers, the Clay County Fair and the causes every Garber store stands behind."
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Automall Chevrolet Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberautomallchevrolet.com/garber-automall-chevrolet-mission-vision-values.htm",
+      "metaTitle": "Mission, Vision & Values | Garber Automall Chevrolet",
+      "metaDescription": "Do the right thing: the mission, vision and core values every Garber Automall Chevrolet team member is hired, trained and measured by."
+    }
+  ]
+}

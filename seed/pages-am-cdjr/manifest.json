@@ -1,0 +1,46 @@
+{
+  "dealership": "garber-automall-cdjr",
+  "versionNote": "Garber Chrysler Dodge Jeep Ram pages, unique store content (Nov 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Chrysler Dodge Jeep Ram About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberchryslerdodgejeep.com/dealership/about.htm",
+      "metaTitle": "About Garber Chrysler Dodge Jeep Ram | Green Cove Springs",
+      "metaDescription": "Jeep, Ram, Dodge and Chrysler on the Garber Automall campus at 3408 Highway 17, backed by a family-owned group since 1907. Serving Clay County and Jacksonville."
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Chrysler Dodge Jeep Ram Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberchryslerdodgejeep.com/garber-chrysler-dodge-jeep-ram-dealership-reviews.htm",
+      "metaTitle": "Garber Chrysler Dodge Jeep Ram Reviews | Green Cove Springs",
+      "metaDescription": "Read Google reviews from Garber Chrysler Dodge Jeep Ram customers and see why Jeep and Ram buyers drive in from Jacksonville, St. Augustine and Ocala."
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Chrysler Dodge Jeep Ram History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberchryslerdodgejeep.com/garber-chrysler-dodge-jeep-ram-history-of-our-dealership.htm",
+      "metaTitle": "Our History | Garber Chrysler Dodge Jeep Ram",
+      "metaDescription": "From Guy S. Garber’s start in 1907 to Garber Chrysler Dodge Jeep Ram on U.S. 17 in Green Cove Springs: a family business that grew beyond Michigan."
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Chrysler Dodge Jeep Ram Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberchryslerdodgejeep.com/garber-chrysler-dodge-jeep-ram-commitment-to-community.htm",
+      "metaTitle": "Community Involvement | Garber Chrysler Dodge Jeep Ram",
+      "metaDescription": "See how Garber Chrysler Dodge Jeep Ram supports Clay County teachers, the Clay County Fair and the causes every Garber store stands behind."
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Chrysler Dodge Jeep Ram Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberchryslerdodgejeep.com/garber-chrysler-dodge-jeep-ram-mission-vision-values.htm",
+      "metaTitle": "Mission, Vision & Values | Garber Chrysler Dodge Jeep Ram",
+      "metaDescription": "Do the right thing: the mission, vision and core values every Garber Chrysler Dodge Jeep Ram team member is hired, trained and measured by."
+    }
+  ]
+}

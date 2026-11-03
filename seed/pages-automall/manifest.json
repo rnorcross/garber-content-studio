@@ -1,6 +1,6 @@
 {
   "dealership": "garber-automall-overall",
-  "versionNote": "Garber Automall pages with reviewer notes applied (Nov 2026)",
+  "versionNote": "Garber Automall pages, heading sizes fixed for the site theme (Nov 3, 2026)",
   "pages": [
     { "file": "about.html", "title": "Garber Automall About Us", "pageType": "about", "liveUrl": "https://www.garberautomall.com/dealership/about.htm",
       "metaTitle": "About Garber Automall | Green Cove Springs, FL Dealership",

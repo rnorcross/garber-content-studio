@@ -1,5 +1,5 @@
 {
-  "note": "Garber Automotive Group store roster. Logo and image URLs are served from the live Garber asset CDN (assets.garberauto.com) \u2014 reference them directly; do not copy into the design system.",
+  "note": "Garber Automotive Group store roster. Logo and image URLs are served from the live Garber asset CDN (assets.garberauto.com) — reference them directly; do not copy into the design system.",
   "cdnBase": "https://assets.garberauto.com/assets",
   "dealerships": [
     {
@@ -45,14 +45,14 @@
     },
     {
       "slug": "garber-automall-cdjr",
-      "name": "Garber Automall CDJR",
+      "name": "Garber Chrysler Dodge Jeep Ram",
       "makes": [
         "Chrysler",
         "Dodge",
         "Jeep",
         "RAM"
       ],
-      "city": "Orange Park, FL",
+      "city": "Green Cove Springs, FL",
       "website": "https://www.garberchryslerdodgejeep.com",
       "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-automall-cdjr-white-logo-vertical.png",
       "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-automall-cdjr-modern-logo-vertical.png",
@@ -61,12 +61,12 @@
     },
     {
       "slug": "garber-automall-ford",
-      "name": "Garber Automall Ford",
+      "name": "Garber Ford",
       "makes": [
         "Ford"
       ],
-      "city": "Orange Park, FL",
-      "website": "https://www.garberautomall.com",
+      "city": "Green Cove Springs, FL",
+      "website": "https://www.garberford.net",
       "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-ford-white-logo.png",
       "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-ford-modern-logo.png",
       "imageHorizontal": null,
@@ -74,14 +74,26 @@
     },
     {
       "slug": "garber-automall-gm",
-      "name": "Garber Automall GM",
+      "name": "Garber Automall Chevrolet",
       "makes": [
-        "Chevrolet",
+        "Chevrolet"
+      ],
+      "city": "Green Cove Springs, FL",
+      "website": "https://www.garberautomallchevrolet.com",
+      "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-automall-gm-white-logo-vertical.png",
+      "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-automall-gm-modern-logo-vertical.png",
+      "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-automall-horizontal.jpg",
+      "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-automall-vertical.jpg"
+    },
+    {
+      "slug": "garber-automall-buick-gmc",
+      "name": "Garber Automall Buick GMC",
+      "makes": [
         "Buick",
         "GMC"
       ],
-      "city": "Orange Park, FL",
-      "website": "https://www.garberautomall.com",
+      "city": "Green Cove Springs, FL",
+      "website": "https://www.garberautomallbuickgmc.com",
       "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-automall-gm-white-logo-vertical.png",
       "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-automall-gm-modern-logo-vertical.png",
       "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-automall-horizontal.jpg",

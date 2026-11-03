@@ -1,0 +1,46 @@
+{
+  "dealership": "garber-automall-buick-gmc",
+  "versionNote": "Garber Automall Buick GMC pages, unique store content (Nov 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Automall Buick GMC About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberautomallbuickgmc.com/dealership/about.htm",
+      "metaTitle": "About Garber Automall Buick GMC | Green Cove Springs FL",
+      "metaDescription": "Garber started with Buick in 1907. Today Garber Automall Buick GMC sells new Buick SUVs and GMC Sierra, Yukon and Denali models on U.S. 17."
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Automall Buick GMC Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberautomallbuickgmc.com/garber-automall-buick-gmc-dealership-reviews.htm",
+      "metaTitle": "Garber Automall Buick GMC Reviews | Green Cove Springs",
+      "metaDescription": "Read Google reviews from Garber Automall Buick GMC customers and see why Northeast Florida drivers buy their Yukons, Sierras and Enclaves here."
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Automall Buick GMC History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberautomallbuickgmc.com/garber-automall-buick-gmc-history-of-our-dealership.htm",
+      "metaTitle": "Our History | Garber Automall Buick GMC, Green Cove Springs",
+      "metaDescription": "From Guy S. Garber’s first Buick dealership in 1907 to Garber Automall Buick GMC on U.S. 17 today: a family business built on Buick."
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Automall Buick GMC Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberautomallbuickgmc.com/garber-automall-buick-gmc-commitment-to-community.htm",
+      "metaTitle": "Community Involvement | Garber Automall Buick GMC",
+      "metaDescription": "See how Garber Automall Buick GMC supports Clay County teachers, the Clay County Fair and the causes every Garber store stands behind."
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Automall Buick GMC Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberautomallbuickgmc.com/garber-automall-buick-gmc-mission-vision-values.htm",
+      "metaTitle": "Mission, Vision & Values | Garber Automall Buick GMC",
+      "metaDescription": "Do the right thing: the mission, vision and core values every Garber Automall Buick GMC team member is hired, trained and measured by."
+    }
+  ]
+}
