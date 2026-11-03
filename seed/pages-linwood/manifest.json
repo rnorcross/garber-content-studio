@@ -1,6 +1,6 @@
 {
   "dealership": "garber-chevrolet-linwood",
-  "versionNote": "Garber Chevrolet Linwood pages with reviews and testimonials (Nov 2026)",
+  "versionNote": "Linwood heading sizes fixed for the site theme (Nov 3, 2026)",
   "pages": [
     { "file": "about.html", "title": "Garber Chevrolet Linwood About Us", "pageType": "about", "liveUrl": "https://www.garberlinwood.com/dealership/about.htm" },
     { "file": "reviews.html", "title": "Garber Chevrolet Linwood Dealership Reviews", "pageType": "reviews", "liveUrl": "https://www.garberlinwood.com/garber-chevrolet-linwood-dealership-reviews.htm" },
