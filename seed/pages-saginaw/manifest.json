@@ -1,6 +1,6 @@
 {
   "dealership": "garber-chevrolet-saginaw",
-  "versionNote": "Garber Chevrolet Saginaw pages: 12 testimonial videos, John C. added (Nov 4, 2026)",
+  "versionNote": "Garber Chevrolet Saginaw pages: John P. YouTube link added (Nov 4, 2026)",
   "pages": [
     { "file": "about.html", "title": "Garber Chevrolet Saginaw About Us", "pageType": "about", "liveUrl": "https://www.garberchevroletsaginaw.com/dealership/about.htm" },
     { "file": "reviews.html", "title": "Garber Chevrolet Saginaw Dealership Reviews", "pageType": "reviews", "liveUrl": "https://www.garberchevroletsaginaw.com/garber-chevrolet-saginaw-dealership-reviews.htm" },
