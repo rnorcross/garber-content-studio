@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-cdjr-valparaiso",
+  "versionNote": "Garber Chrysler Dodge Jeep RAM Valparaiso pages (Nov 4, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Chrysler Dodge Jeep RAM Valparaiso About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garbervalpo.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Chrysler Dodge Jeep RAM Valparaiso Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garbervalpo.com/garber-chrysler-dodge-jeep-ram-valparaiso-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Chrysler Dodge Jeep RAM Valparaiso History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garbervalpo.com/garber-chrysler-dodge-jeep-ram-valparaiso-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Chrysler Dodge Jeep RAM Valparaiso Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garbervalpo.com/garber-chrysler-dodge-jeep-ram-valparaiso-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Chrysler Dodge Jeep RAM Valparaiso Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garbervalpo.com/garber-chrysler-dodge-jeep-ram-valparaiso-mission-vision-values.htm"
+    }
+  ]
+}
