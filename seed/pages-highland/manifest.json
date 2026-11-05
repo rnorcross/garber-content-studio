@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-chevrolet-highland",
+  "versionNote": "Garber Chevrolet Highland pages with 4 customer testimonial videos (Nov 4, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Chevrolet Highland About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberhighland.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Chevrolet Highland Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberhighland.com/garber-chevrolet-highland-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Chevrolet Highland History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberhighland.com/garber-chevrolet-highland-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Chevrolet Highland Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberhighland.com/garber-chevrolet-highland-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Chevrolet Highland Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberhighland.com/garber-chevrolet-highland-mission-vision-values.htm"
+    }
+  ]
+}
