@@ -23,7 +23,7 @@ export default function Login() {
         <div className="card stack" style={{ padding: 32 }}>
         <div>
           <div className="eyebrow">Garber Automotive Group</div>
-          <h1 className="title" style={{ marginTop: 6 }}>Content Studio</h1>
+          <h1 className="title" style={{ marginTop: 6 }}>Website Studio</h1>
           <p className="sub">Sign in to manage dealership website content.</p>
         </div>
         <div className="field">

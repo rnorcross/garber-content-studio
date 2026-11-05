@@ -3,8 +3,8 @@ import './globals.css';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Garber Content Studio',
-  description: 'Create, edit and manage the HTML content embedded on Garber dealership websites.',
+  title: 'Garber Website Studio',
+  description: 'Edit and manage Garber dealership website content and body shop websites.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

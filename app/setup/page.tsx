@@ -48,7 +48,7 @@ export default function Setup() {
         <img src="/garber-logo-white.png" alt="Garber Automotive Group" />
         <div className="card stack" style={{ padding: 32 }}>
           <div>
-            <div className="eyebrow">Content Studio</div>
+            <div className="eyebrow">Website Studio</div>
             <h1 className="title" style={{ marginTop: 6 }}>Setup</h1>
             <p className="sub">Creates the database tables, your admin account, the shared images, and the pre-built pages for every dealership. Safe to run again — it only adds what’s missing. You don’t need to run it after updates: new and changed pages load automatically on every deploy.</p>
           </div>
