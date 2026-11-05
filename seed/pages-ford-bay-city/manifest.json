@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-ford-bay-city",
+  "versionNote": "Garber Ford Bay City pages with Hagen Ford history and Google reviews (Nov 4, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Ford Bay City About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberfordbaycity.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Ford Bay City Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberfordbaycity.com/garber-ford-bay-city-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Ford Bay City History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberfordbaycity.com/garber-ford-bay-city-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Ford Bay City Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberfordbaycity.com/garber-ford-bay-city-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Ford Bay City Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberfordbaycity.com/garber-ford-bay-city-mission-vision-values.htm"
+    }
+  ]
+}
