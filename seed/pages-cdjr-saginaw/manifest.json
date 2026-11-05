@@ -1,6 +1,6 @@
 {
   "dealership": "garber-cdjr-saginaw",
-  "versionNote": "Garber Chrysler Dodge Jeep Ram (Saginaw) pages with reviews (Nov 4, 2026)",
+  "versionNote": "Garber Chrysler Dodge Jeep Ram (Saginaw) pages with Jessica and Eugene testimonials (Nov 4, 2026)",
   "pages": [
     { "file": "about.html", "title": "Garber Chrysler Dodge Jeep Ram About Us", "pageType": "about", "liveUrl": "https://www.garberchryslerdodgeramjeep.com/dealership/about.htm" },
     { "file": "reviews.html", "title": "Garber Chrysler Dodge Jeep Ram Dealership Reviews", "pageType": "reviews", "liveUrl": "https://www.garberchryslerdodgeramjeep.com/garber-chrysler-dodge-jeep-ram-dealership-reviews.htm" },
