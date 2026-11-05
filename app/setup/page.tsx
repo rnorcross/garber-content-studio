@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 type Status = {
   onVercel: boolean; database: boolean; blob: boolean; authSecret: boolean; adminConfigured: boolean; claude: boolean;
   tables: boolean; users: number; pages: number; dealerships: number; error: string | null;
+  contentVersion?: string | null; contentLoaded?: boolean; contentLoadedAt?: string | null;
 };
 
 export default function Setup() {
@@ -49,7 +50,7 @@ export default function Setup() {
           <div>
             <div className="eyebrow">Content Studio</div>
             <h1 className="title" style={{ marginTop: 6 }}>Setup</h1>
-            <p className="sub">Creates the database tables, your admin account, the shared images, and the pre-built pages for every dealership. Safe to run again — it only adds what’s missing.</p>
+            <p className="sub">Creates the database tables, your admin account, the shared images, and the pre-built pages for every dealership. Safe to run again — it only adds what’s missing. You don’t need to run it after updates: new and changed pages load automatically on every deploy.</p>
           </div>
 
           {!s && !error && <p className="muted small">Checking…</p>}
@@ -62,6 +63,9 @@ export default function Setup() {
                 </div>
               ))}
               {s.tables && <p className="small muted">Loaded so far: {s.dealerships} dealerships · {s.pages} pages · {s.users} account{s.users === 1 ? '' : 's'}.</p>}
+              {s.tables && s.contentVersion && (s.contentLoaded
+                ? <div className="notice ok small">The latest content is loaded{s.contentLoadedAt ? ` (${new Date(s.contentLoadedAt).toLocaleString()})` : ''}. New pages load automatically each time the studio is deployed.</div>
+                : <div className="notice small">New content from the latest deploy hasn’t loaded yet. It normally loads automatically during the deploy; an admin can run Setup below to load it now.</div>)}
               {s.error && <p className="err">{s.error}</p>}
             </div>
           )}

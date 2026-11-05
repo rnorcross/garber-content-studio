@@ -1,6 +1,7 @@
 import { sql, databaseUrl } from '@/lib/db';
 import { getUser } from '@/lib/auth';
 import { migrate, seed } from '@/lib/setup.mjs';
+import { seedVersion } from '@/lib/seed-version.mjs';
 
 export const maxDuration = 300;
 export const dynamic = 'force-dynamic';
@@ -10,6 +11,7 @@ async function status() {
     onVercel: !!process.env.VERCEL, database: !!databaseUrl(), blob: !!(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN), authSecret: (process.env.AUTH_SECRET ?? '').length >= 32,
     adminConfigured: !!(process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD), claude: !!process.env.ANTHROPIC_API_KEY,
     tables: false, users: 0, pages: 0, dealerships: 0, error: null as string | null,
+    contentVersion: null as string | null, contentLoaded: false, contentLoadedAt: null as string | null,
   };
   if (!out.database) return out;
   try {
@@ -20,6 +22,12 @@ async function status() {
         select (select count(*) from users)::int as users, (select count(*) from pages)::int as pages,
                (select count(*) from dealerships)::int as dealerships`;
       Object.assign(out, c);
+      try {
+        out.contentVersion = seedVersion();
+        const [f] = await sql<{ set_at: string }[]>`select set_at from app_flags where key = ${'seed:' + out.contentVersion}`;
+        out.contentLoaded = !!f;
+        out.contentLoadedAt = f ? new Date(f.set_at).toISOString() : null;
+      } catch { /* seed files not bundled: leave unknown */ }
     }
   } catch (e) {
     out.error = (e as Error).message;
@@ -60,6 +68,7 @@ export async function POST(req: Request) {
     await migrate(sql);
     log.push('Tables are up to date.');
     const result = await seed(sql, (m: string) => log.push(m));
+    try { await sql`insert into app_flags (key) values (${'seed:' + seedVersion()}) on conflict do nothing`; } catch { /* ignore */ }
     return Response.json({ ok: true, log, result });
   } catch (e) {
     console.error(e);
