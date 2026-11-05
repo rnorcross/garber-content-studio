@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-hyundai",
+  "versionNote": "Garber Hyundai pages with Google reviews (Nov 4, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Hyundai About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberhyundai.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Hyundai Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberhyundai.com/garber-hyundai-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Hyundai History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberhyundai.com/garber-hyundai-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Hyundai Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberhyundai.com/garber-hyundai-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Hyundai Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberhyundai.com/garber-hyundai-mission-vision-values.htm"
+    }
+  ]
+}

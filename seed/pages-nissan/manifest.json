@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-nissan",
+  "versionNote": "Garber Nissan pages with Google reviews (Nov 4, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Nissan About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garbernissan.net/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Nissan Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garbernissan.net/garber-nissan-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Nissan History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garbernissan.net/garber-nissan-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Nissan Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garbernissan.net/garber-nissan-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Nissan Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garbernissan.net/garber-nissan-mission-vision-values.htm"
+    }
+  ]
+}
