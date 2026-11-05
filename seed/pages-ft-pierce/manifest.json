@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-buick-gmc",
+  "versionNote": "Garber Buick GMC Fort Pierce pages (Nov 4, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Buick GMC About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberbuickgmc.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Buick GMC Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberbuickgmc.com/garber-buick-gmc-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Buick GMC History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberbuickgmc.com/garber-buick-gmc-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Buick GMC Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberbuickgmc.com/garber-buick-gmc-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Buick GMC Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberbuickgmc.com/garber-buick-gmc-mission-vision-values.htm"
+    }
+  ]
+}
