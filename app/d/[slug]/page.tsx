@@ -20,7 +20,7 @@ export default async function DealershipPage({ params }: { params: Promise<{ slu
 
   return (
     <>
-      <TopBar user={user} on="library" />
+      <TopBar user={user} on="dealerships" />
       <main className="wrap">
         <div className="head">
           <div className="row" style={{ gap: 16 }}>

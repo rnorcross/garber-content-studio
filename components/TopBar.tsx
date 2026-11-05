@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import type { SessionUser } from '@/lib/auth';
 
-export type Section = 'library' | 'new' | 'media' | 'templates' | 'team' | 'account';
+export type Section = 'library' | 'dealerships' | 'new' | 'media' | 'templates' | 'team' | 'account';
 
 export default function TopBar({ user, on }: { user: SessionUser; on?: Section }) {
   const tabs: [Section, string, string][] = [
     ['library', '/', 'Library'],
+    ['dealerships', '/dealerships', 'Dealerships'],
     ['new', '/new', 'New Page'],
     ['media', '/media', 'Media'],
     ...(user.role === 'admin'

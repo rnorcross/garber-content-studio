@@ -6,8 +6,6 @@ import PageTable, { type PageRow } from '@/components/PageTable';
 
 export const dynamic = 'force-dynamic';
 
-type DRow = { id: number; slug: string; name: string; city: string | null; logo: string | null; pages: number; stale: number };
-
 export default async function Library({ searchParams }: { searchParams: Promise<{ q?: string; status?: string }> }) {
   const user = await requireUser();
   const { q = '', status = '' } = await searchParams;
@@ -27,12 +25,6 @@ export default async function Library({ searchParams }: { searchParams: Promise<
     order by p.updated_at desc
     limit 200`;
 
-  const dealers = await sql<DRow[]>`
-    select d.id, d.slug, d.name, d.city, d.logo,
-      count(p.id) filter (where p.status <> 'archived')::int as pages,
-      count(p.id) filter (where p.live_version is not null and p.current_version <> p.live_version and p.status <> 'archived')::int as stale
-    from dealerships d left join pages p on p.dealership_id = d.id
-    group by d.id order by d.sort, d.name`;
 
   const [{ stale }] = await sql<{ stale: number }[]>`
     select count(*)::int as stale from pages where live_version is not null and current_version <> live_version and status <> 'archived'`;
@@ -95,22 +87,6 @@ export default async function Library({ searchParams }: { searchParams: Promise<
 
         <PageTable rows={pages} />
 
-        <h2 className="section-title">Dealerships</h2>
-        <div className="grid g-3">
-          {dealers.map((d) => (
-            <Link key={d.id} href={`/d/${d.slug}`} className="card dtile">
-              <span className="dlogo">{d.logo ? <img src={d.logo} alt="" /> : null}</span>
-              <span style={{ minWidth: 0 }}>
-                <span className="dname" style={{ display: 'block' }}>{d.name}</span>
-                <span className="dmeta">
-                  {d.pages ? `${d.pages} page${d.pages > 1 ? 's' : ''}` : 'No pages yet'}
-                  {d.city ? ` · ${d.city}` : ''}
-                </span>
-                {d.stale > 0 && <span className="chip warn" style={{ marginTop: 6 }}>{d.stale} to re-paste</span>}
-              </span>
-            </Link>
-          ))}
-        </div>
       </main>
     </>
   );
