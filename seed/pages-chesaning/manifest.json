@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-chevrolet-chesaning",
+  "versionNote": "Garber Chevrolet Chesaning pages with LaClair history and Google reviews (Nov 4, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Chevrolet Chesaning About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberchesaning.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Chevrolet Chesaning Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberchesaning.com/garber-chevrolet-chesaning-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Chevrolet Chesaning History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberchesaning.com/garber-chevrolet-chesaning-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Chevrolet Chesaning Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberchesaning.com/garber-chevrolet-chesaning-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Chevrolet Chesaning Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberchesaning.com/garber-chevrolet-chesaning-mission-vision-values.htm"
+    }
+  ]
+}
