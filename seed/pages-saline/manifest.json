@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-chevrolet-saline",
+  "versionNote": "Garber Chevrolet Saline pages (Nov 9, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Chevrolet Saline About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garbersaline.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Chevrolet Saline Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garbersaline.com/garber-chevrolet-saline-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Chevrolet Saline History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garbersaline.com/garber-chevrolet-saline-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Chevrolet Saline Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garbersaline.com/garber-chevrolet-saline-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Chevrolet Saline Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garbersaline.com/garber-chevrolet-saline-mission-vision-values.htm"
+    }
+  ]
+}
