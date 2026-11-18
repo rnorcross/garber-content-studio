@@ -200,6 +200,7 @@ body:has(.side) { padding-left: var(--side-w); }
 .side-top { display: flex; align-items: center; justify-content: space-between; padding: 0 8px 22px; border-bottom: 1px solid #ebe7e1; margin-bottom: 14px; }
 .side-brand { display: flex; align-items: center; gap: 10px; color: var(--side-ink); }
 .side-brand:hover { color: var(--side-ink); }
+.side-logo { display: block; width: 150px; height: auto; }
 .side-mark { width: 30px; height: 30px; border-radius: 9px; background: var(--side-pill); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 15px; }
 .side-name { font-weight: 800; font-size: 15px; letter-spacing: -0.02em; }
 .side-burger { display: none; cursor: pointer; color: var(--side-ink); padding: 6px; }

@@ -39,5 +39,5 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   // Runs on every path except Next's own files; static files under /sites/ are let through above.
-  matcher: ['/((?!login|setup|api/setup|api/auth|_next|favicon|icon|garber-logo-white\\.png).*)'],
+  matcher: ['/((?!login|setup|api/setup|api/auth|_next|favicon|icon|garber-logo-[a-z]+\\.png).*)'],
 };

@@ -64,8 +64,7 @@ export default function TopBar({ user, on }: { user: SessionUser; on?: Section }
       <div className="side-in">
         <div className="side-top">
           <Link href="/" className="side-brand" aria-label="Website Studio home">
-            <span className="side-mark">G</span>
-            <span className="side-name">WEBSITE/STUDIO</span>
+            <img src="/garber-logo-dark.png" alt="Garber Automotive Group" className="side-logo" width="697" height="231" />
           </Link>
           <label htmlFor="side-toggle" className="side-burger" aria-hidden="true"><Icon d="M4 7h16M4 12h16M4 17h16" /></label>
         </div>
