@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-honda",
+  "versionNote": "Garber Honda pages (Nov 18, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Honda About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberhonda.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Honda Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberhonda.com/garber-honda-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Honda History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberhonda.com/garber-honda-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Honda Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberhonda.com/garber-honda-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Honda Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberhonda.com/garber-honda-mission-vision-values.htm"
+    }
+  ]
+}
