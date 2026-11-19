@@ -1,7 +1,7 @@
 import { revalidateTag } from 'next/cache';
 import { sql } from '@/lib/db';
 import { route, json, fail, idOf, type IdCtx } from '@/lib/api';
-import { getPage, getSite, editId, norm, cleanPath, duplicatePage, canPublish, type BsSite, type Edit } from '@/lib/bodyshop';
+import { getPage, getSite, editId, norm, cleanPath, duplicatePage, canPublish, STYLE_PROPS, type BsSite, type Edit, type StyleSet, type Target } from '@/lib/bodyshop';
 
 // One endpoint for everything the page editor does, picked by `action`.
 export const POST = route<IdCtx>(async (req, user, ctx) => {
@@ -43,6 +43,35 @@ export const POST = route<IdCtx>(async (req, user, ctx) => {
         const to = String(b.to ?? '').trim();
         if (!to) return fail('Enter the new item’s text');
         e = { id: editId(), kind: 'dup', tag: b.tag, from: norm(String(b.from || '')), leaf: norm(String(b.leaf || '')), to, scope, ...nth, ...stamp };
+      } else if (b.kind === 'style') {
+        // Style for one element on one device. Merged into that element's existing style edit.
+        if (!b.tag || !/^[a-z0-9]+$/.test(b.tag)) return fail('Bad element');
+        const device = (['all', 'tablet', 'phone'] as const).find((d) => d === b.device) ?? 'all';
+        const css: Record<string, string> = {};
+        for (const [k, v] of Object.entries(b.css ?? {})) {
+          const val = String(v ?? '').trim();
+          if ((STYLE_PROPS as readonly string[]).includes(k) && /^[#a-z0-9 .,%()+-]{0,60}$/i.test(val)) css[k] = val;
+        }
+        const from = b.tag === 'img' ? String(b.from || '') : norm(String(b.from || ''));
+        const list: Edit[] = scope === 'site' ? site.edits : page.edits;
+        const prior = list.find((x) => x.kind === 'style' && x.tag === b.tag && x.from === from && (x.nth ?? null) === (nth.nth ?? null)) as Extract<Edit, { kind: 'style' }> | undefined;
+        const merged: StyleSet = { ...(prior?.css ?? {}) };
+        const next = { ...(merged[device] ?? {}), ...css };
+        for (const k of Object.keys(next)) if (!next[k]) delete next[k]; // an empty value clears it
+        merged[device] = next;
+        const e2: Edit = { id: prior?.id ?? editId(), kind: 'style', tag: b.tag, from, ...nth, css: merged, label: String(b.label || '').slice(0, 60), scope, ...stamp };
+        const out = prior ? list.map((x) => (x === prior ? e2 : x)) : [...list, e2];
+        if (scope === 'site') await sql`update bs_sites set edits = ${sql.json(out as any)} where id = ${site.id}`;
+        else await sql`update bs_pages set edits = ${sql.json(out as any)}, updated_at = now() where id = ${id}`;
+        return json({ ok: true, id: e2.id });
+      } else if (b.kind === 'move') {
+        if (!b.tag || !/^[a-z0-9]+$/.test(b.tag)) return fail('Bad element');
+        const t = (x: any): Target | null => (x && x.tag && /^[a-z0-9]+$/.test(x.tag)
+          ? { tag: String(x.tag), from: x.tag === 'img' ? String(x.from || '') : norm(String(x.from || '')), ...(Number.isInteger(x.nth) && x.count > 1 ? { nth: x.nth } : {}) } : null);
+        const me = t(b)!;
+        e = { id: editId(), kind: 'move', ...me, after: t(b.after), label: String(b.label || '').slice(0, 60), scope: 'page', ...stamp };
+        await sql`update bs_pages set edits = ${sql.json([...page.edits, e] as any)}, updated_at = now() where id = ${id}`;
+        return json({ ok: true });
       } else if (b.kind === 'alt') {
         if (!b.from) return fail('Pick an image');
         e = { id: editId(), kind: 'alt', from: String(b.from), to: String(b.to ?? '').trim(), scope, ...stamp };

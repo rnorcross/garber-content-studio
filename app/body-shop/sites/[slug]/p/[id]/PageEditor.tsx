@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api, copyText } from '@/lib/client';
 import CopyToShops from '@/components/CopyToShops';
+import { StructurePanel, StylePanel, type TreeNode, type Selected, type Device } from './BuilderPanels';
 import MediaPicker from '@/components/MediaPicker';
 import type { Edit, Meta, PageStatus } from '@/lib/bodyshop';
 
@@ -27,11 +28,11 @@ type Scan = {
   images: { src: string; alt: string }[];
 };
 type Item = { tag: string; from: string; nth: number; count: number; leaf: string; label: string };
-type Tab = 'changes' | 'sections' | 'seo' | 'page' | 'history';
+type Tab = 'changes' | 'structure' | 'style' | 'seo' | 'page' | 'history';
 
 const decode = (s: string) => s.replace(/&amp;/g, '&').replace(/&#39;|&#x27;/g, "'").replace(/&quot;/g, '"');
 const fmt = (d: string) => new Date(d).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
-const KIND: Record<Edit['kind'], string> = { text: 'Text', img: 'Image', link: 'Link', alt: 'Alt text', replace: 'Replace', hide: 'Hidden', dup: 'Added item' };
+const KIND: Record<Edit['kind'], string> = { text: 'Text', img: 'Image', link: 'Link', alt: 'Alt text', replace: 'Replace', hide: 'Hidden', dup: 'Added item', style: 'Style', move: 'Moved' };
 const plain = (h: string) => h.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
 export default function PageEditor({ site, page, orig, changed, broken, history, pages, canPublish, others }: Props) {
@@ -39,13 +40,20 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
   const frame = useRef<HTMLIFrameElement>(null);
   const scrollY = useRef(0);
   const [mode, setMode] = useState<'edit' | 'draft' | 'live'>('edit');
-  const [width, setWidth] = useState<'desktop' | 'phone'>('desktop');
+  const [width, setWidth] = useState<'desktop' | 'tablet' | 'phone'>('desktop');
   const [scope, setScope] = useState<'page' | 'site'>('page');
   const [v, setV] = useState(0);
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
   const [tab, setTab] = useState<Tab>('changes');
   const [scan, setScan] = useState<Scan | null>(null);
+  // Page builder: the page's structure, the selected element, and unsaved style changes.
+  const [tree, setTree] = useState<TreeNode[] | null>(null);
+  const [sel, setSel] = useState<Selected | null>(null);
+  const [device, setDevice] = useState<Device>('all');
+  const [draftCss, setDraftCss] = useState<Record<string, string>>({});
+  const repick = useRef<string | null>(null);
+  const post = (msg: object) => frame.current?.contentWindow?.postMessage(msg, '*');
 
   // What was clicked in the preview.
   const [img, setImg] = useState<{ src: string; alt: string; nth: number; count: number } | null>(null);
@@ -112,6 +120,12 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
       const d = e.data;
       if (d.ws === 'scrolled') scrollY.current = d.y;
       else if (d.ws === 'scan') setScan({ sections: d.sections, images: d.images });
+      else if (d.ws === 'tree') {
+        setTree(d.nodes);
+        // After a save the frame reloads: select the same element again.
+        if (repick.current) { post({ ws: 'pick', path: repick.current }); repick.current = null; }
+      }
+      else if (d.ws === 'selected') { setSel(d.el); setDraftCss({}); }
       else if (d.ws === 'text') act('save', { action: 'edit', kind: 'text', tag: d.tag, from: d.from, to: d.to, scope, ...one(d) });
       else if (d.ws === 'img') { setImg({ src: d.src, alt: d.alt, nth: d.nth, count: d.count }); setAlt(d.alt); setFocus(null); setTab('changes'); }
       else if (d.ws === 'link') { setLink(d); setHref(d.href); setNewTab(!!d.newTab); setTab('changes'); }
@@ -126,12 +140,29 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
 
   // Ask the preview for its sections and images until it answers (it can finish loading before
   // this page is listening). A new frame (after a save) starts over.
-  useEffect(() => { setScan(null); }, [mode, v]);
+  useEffect(() => { setScan(null); setTree(null); }, [mode, v]);
   useEffect(() => {
-    if (scan || mode !== 'edit') return;
-    const t = setInterval(() => frame.current?.contentWindow?.postMessage({ ws: 'scan?' }, '*'), 700);
+    if ((scan && tree) || mode !== 'edit') return;
+    const t = setInterval(() => { if (!scan) post({ ws: 'scan?' }); if (!tree) post({ ws: 'tree?' }); }, 700);
     return () => clearInterval(t);
-  }, [mode, v, scan]);
+  }, [mode, v, scan, tree]);
+  // Live preview of unsaved style changes on the selected element.
+  useEffect(() => { if (sel) post({ ws: 'live-style', css: draftCss }); }, [draftCss]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Device tabs in the Style panel also size the preview.
+  useEffect(() => { if (tab === 'style') setWidth(device === 'all' ? 'desktop' : device); }, [device, tab]);
+
+  const styleEdit = sel ? [...page.edits, ...site.edits].find((e) => e.kind === 'style' && sel.marks.split(' ').includes(e.id)) : undefined;
+  async function saveStyle() {
+    if (!sel?.key) return;
+    repick.current = sel.path;
+    const k = sel.key;
+    await act('save', { action: 'edit', kind: 'style', tag: k.tag, from: k.from, ...(k.count > 1 ? { nth: k.nth } : {}), css: draftCss, device, label: `${sel.kind}: ${sel.label.slice(0, 40)}`, scope: 'page' });
+  }
+  async function moveNode(n: TreeNode, after: TreeNode | null) {
+    if (!n.key) return;
+    repick.current = null;
+    await act('save', { action: 'edit', kind: 'move', ...n.key, after: after?.key ?? null, label: `${n.kind}: ${n.label.slice(0, 40)}` });
+  }
 
   // Keep the reader's place when the frame reloads after a save.
   const onLoad = () => frame.current?.contentWindow?.postMessage({ ws: 'scroll', y: scrollY.current }, '*');
@@ -173,6 +204,15 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
         </>
       ) : e.kind === 'hide' ? (
         <div className="bs-change-to">{e.label || e.from.slice(0, 80)}</div>
+      ) : e.kind === 'style' ? (
+        <>
+          <div className="bs-change-to">{e.label || e.from.slice(0, 60)}</div>
+          {(['all', 'tablet', 'phone'] as const).filter((d) => e.css[d] && Object.keys(e.css[d]!).length).map((d) => (
+            <div key={d} className="bs-change-by">{d === 'all' ? 'All devices' : d === 'tablet' ? 'Tablet' : 'Phone'}: {Object.entries(e.css[d]!).map(([k, v]) => `${k} ${v}`).join(' · ')}</div>
+          ))}
+        </>
+      ) : e.kind === 'move' ? (
+        <div className="bs-change-to">{e.label || e.from.slice(0, 60)} → {e.after ? `after “${e.after.from.slice(0, 40)}”` : 'first'}</div>
       ) : e.kind === 'dup' ? (
         <>
           <div className="bs-change-by">After “{e.leaf.slice(0, 60)}”</div>
@@ -214,6 +254,7 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
           </div>
           <div className="seg">
             <button className={width === 'desktop' ? 'on' : ''} onClick={() => setWidth('desktop')}>Desktop</button>
+            <button className={width === 'tablet' ? 'on' : ''} onClick={() => setWidth('tablet')}>Tablet</button>
             <button className={width === 'phone' ? 'on' : ''} onClick={() => setWidth('phone')}>Phone</button>
           </div>
           <a className="btn sm" href={`/s/${site.slug}${page.path}`} target="_blank" rel="noreferrer">Open ↗</a>
@@ -240,14 +281,14 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
             title="Page preview"
             onLoad={onLoad}
             src={`/api/body-shop/pages/${page.id}/frame?mode=${mode}&v=${v}`}
-            className={'bs-ed-frame' + (width === 'phone' ? ' phone' : '')}
+            className={'bs-ed-frame' + (width === 'phone' ? ' phone' : width === 'tablet' ? ' tablet' : '')}
           />
           {busy === 'save' && <div className="bs-ed-saving">Saving…</div>}
         </div>
 
         <aside className="bs-ed-panel">
           <div className="seg full bs-tabs">
-            {([['changes', 'Changes'], ['sections', 'Sections'], ['seo', 'Search'], ['page', 'Page'], ['history', 'History']] as [Tab, string][]).map(([k, l]) => (
+            {([['changes', 'Edits'], ['structure', 'Structure'], ['style', 'Style'], ['seo', 'SEO'], ['page', 'Page'], ['history', 'History']] as [Tab, string][]).map(([k, l]) => (
               <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>
             ))}
           </div>
@@ -395,29 +436,21 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
             </div>
           )}
 
-          {tab === 'sections' && (
-            <div className="stack">
-              <p className="sub" style={{ fontSize: 13.5 }}>Hide a section to take it off this page without deleting it. Hidden sections show faded in Edit view.</p>
-              {mode !== 'edit' && <p className="bs-warn">Switch to Edit view to list this page’s sections.</p>}
-              {mode === 'edit' && !scan && <p className="sub">Reading the page…</p>}
-              {mode === 'edit' && scan?.sections.map((sec) => {
-                const hide = hideEdits.find((e) => sec.marks.split(' ').includes(e.id));
-                return (
-                  <div key={sec.i} className="bs-section-row">
-                    <button className="bs-section-name" onClick={() => goto(sec.i)} title="Show it in the preview">
-                      <span className={sec.hidden ? 'off' : ''}>{sec.label || `(${sec.tag})`}</span>
-                      <span className="bs-row-sub">{sec.tag}</span>
-                    </button>
-                    {hide
-                      ? <button className="btn sm" disabled={!!busy} onClick={() => removeEdit(hide)}>Show</button>
-                      : <button className="btn sm ghost" disabled={!!busy}
-                          onClick={() => act('save', { action: 'edit', kind: 'hide', tag: sec.tag, from: sec.from, label: sec.label, scope: 'page', ...(sec.count > 1 ? { nth: sec.nth } : {}) })}>
-                          Hide
-                        </button>}
-                  </div>
-                );
-              })}
-            </div>
+          {tab === 'structure' && (
+            mode !== 'edit'
+              ? <p className="bs-warn">Switch to Edit view to see the page’s structure.</p>
+              : <StructurePanel nodes={tree} selected={sel?.path ?? null} edits={[...page.edits, ...site.edits]} busy={!!busy} post={post}
+                  onHide={(n) => n.key && act('save', { action: 'edit', kind: 'hide', tag: n.key.tag, from: n.key.from, label: `${n.kind}: ${n.label.slice(0, 50)}`, scope: 'page', ...(n.key.count > 1 ? { nth: n.key.nth } : {}) })}
+                  onShow={(id) => { const e = [...page.edits, ...site.edits].find((x) => x.id === id); if (e) removeEdit(e); }}
+                  onMove={moveNode} />
+          )}
+
+          {tab === 'style' && (
+            mode !== 'edit'
+              ? <p className="bs-warn">Switch to Edit view to style elements.</p>
+              : <StylePanel sel={sel} device={device} setDevice={setDevice} draft={draftCss} setDraft={setDraftCss} busy={!!busy}
+                  onPick={(path) => post({ ws: 'pick', path })} onSave={saveStyle} hasStyle={!!styleEdit}
+                  onClear={() => { if (styleEdit) { repick.current = sel?.path ?? null; removeEdit(styleEdit); } }} />
           )}
 
           {tab === 'seo' && (
