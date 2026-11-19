@@ -16,8 +16,9 @@ export async function middleware(req: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // Public body shop pages and their files, on the studio's own address.
-  if (pathname.startsWith('/s/') || pathname.startsWith('/sites/')) return NextResponse.next();
+  // Public body shop pages and their files, on the studio's own address; draft share links
+  // (checked by their own token); the scheduled-publish cron (checked by CRON_SECRET).
+  if (pathname.startsWith('/s/') || pathname.startsWith('/sites/') || pathname.startsWith('/preview/') || pathname === '/api/cron/body-shop') return NextResponse.next();
 
   const token = req.cookies.get('gcs_session')?.value;
   let ok = false;

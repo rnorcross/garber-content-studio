@@ -1,5 +1,5 @@
 import { unstable_cache } from 'next/cache';
-import { getSite, getPageByPath, renderPage } from '@/lib/bodyshop';
+import { getSite, getPageByPath, renderPage, findRedirect, checkSchedulesSoon, type BsPage } from '@/lib/bodyshop';
 import { siteForHost } from '@/lib/site-hosts';
 
 // Public body shop pages. A site's own domain is routed here by middleware.ts
@@ -12,9 +12,13 @@ const render = (slug: string, p: string, ownDomain: boolean) =>
     async () => {
       const site = await getSite(slug);
       if (!site) return null;
-      let page = await getPageByPath(site.id, p);
+      let page: BsPage | null = await getPageByPath(site.id, p);
       if (!page && !p.endsWith('/')) page = await getPageByPath(site.id, p + '/');
+      // Draft (never published) and hidden pages aren't served; redirects apply to them.
+      if (page && page.status !== 'live') page = null;
       if (!page) {
+        const to = await findRedirect(site.id, p);
+        if (to) return { status: 301, html: null as string | null, redirect: to as string | null };
         const nf = await getPageByPath(site.id, '/');
         return nf ? { status: 404, html: null as string | null, redirect: null as string | null } : null;
       }
@@ -28,6 +32,7 @@ const render = (slug: string, p: string, ownDomain: boolean) =>
 
 export async function GET(req: Request, { params }: { params: Promise<{ site: string; path?: string[] }> }) {
   const { site, path = [] } = await params;
+  checkSchedulesSoon(); // backstop for scheduled publishes if the cron hasn't run yet
   const p = '/' + path.map(decodeURIComponent).join('/') + (path.length ? '/' : '');
   // Judged by the Host header: after middleware's rewrite the path may already read /s/<slug>/.
   const onOwnDomain = siteForHost(req.headers.get('host')) === site;
@@ -35,7 +40,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ site: st
   if (!out) return new Response('Not found', { status: 404 });
   const u = new URL(req.url);
   if (out.redirect) {
-    return Response.redirect(new URL((onOwnDomain ? '' : `/s/${site}`) + out.redirect, u), 308);
+    const abs = /^https?:\/\//.test(out.redirect);
+    return Response.redirect(abs ? out.redirect : new URL((onOwnDomain ? '' : `/s/${site}`) + out.redirect, u), out.status === 301 ? 301 : 308);
   }
   if (out.status === 404) {
     return new Response('<!doctype html><title>Page not found</title><p style="font-family:sans-serif;padding:40px">Page not found. <a href="' + (onOwnDomain ? '/' : `/s/${site}/`) + '">Go to the home page</a></p>', { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } });

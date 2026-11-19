@@ -6,8 +6,13 @@ import { ALLOWED_TYPES, MAX_BYTES, storageMode } from '@/lib/storage';
 async function check(pathname: string) {
   const user = await getUser();
   if (!user) throw new Error('Not signed in');
-  if (!/^(dealers|group)\//.test(pathname)) throw new Error('Bad upload path');
+  if (!/^(dealers|group|body-shop)\//.test(pathname)) throw new Error('Bad upload path');
 }
+
+/** A body shop site's own files (body-shop/<slug>/assets/…) keep their exact names and can be replaced. */
+const suffix = (pathname: string) => (/^body-shop\/[a-z0-9-]+\/assets\//.test(pathname)
+  ? { addRandomSuffix: false, allowOverwrite: true }
+  : { addRandomSuffix: true });
 
 // Lets the browser upload straight to Vercel Blob (no 4.5 MB serverless body limit,
 // so large photos and videos work). Newer stores (OIDC) get a presigned PUT URL;
@@ -27,7 +32,7 @@ export async function POST(req: Request) {
             pathname, operations: ['put'], allowedContentTypes: ALLOWED_TYPES, maximumSizeInBytes: MAX_BYTES,
             validUntil: Date.now() + 15 * 60 * 1000,
           });
-          return { token, urlOptions: { allowedContentTypes: ALLOWED_TYPES, maximumSizeInBytes: MAX_BYTES, addRandomSuffix: true } };
+          return { token, urlOptions: { allowedContentTypes: ALLOWED_TYPES, maximumSizeInBytes: MAX_BYTES, ...suffix(pathname) } };
         },
       });
       return Response.json(result);
@@ -37,7 +42,7 @@ export async function POST(req: Request) {
       request: req,
       onBeforeGenerateToken: async (pathname) => {
         await check(pathname);
-        return { allowedContentTypes: ALLOWED_TYPES, maximumSizeInBytes: MAX_BYTES, addRandomSuffix: true };
+        return { allowedContentTypes: ALLOWED_TYPES, maximumSizeInBytes: MAX_BYTES, ...suffix(pathname) };
       },
     });
     return Response.json(result);

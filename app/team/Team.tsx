@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { api } from '@/lib/client';
 
-type U = { id: number; name: string; email: string; role: string; must_reset: boolean };
+type U = { id: number; name: string; email: string; role: string; must_reset: boolean; bs_publish?: boolean };
 
 function tempPassword() {
   const a = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -35,6 +35,10 @@ export default function Team({ users, me }: { users: U[]; me: number }) {
     try { await api(`/api/users/${u.id}`, { role: r }, 'PATCH'); setList(list.map((x) => (x.id === u.id ? { ...x, role: r } : x))); }
     catch (e) { setError((e as Error).message); }
   }
+  async function bsPublish(u: U, on: boolean) {
+    try { await api(`/api/users/${u.id}`, { bsPublish: on }, 'PATCH'); setList(list.map((x) => (x.id === u.id ? { ...x, bs_publish: on } : x))); }
+    catch (e) { setError((e as Error).message); }
+  }
   async function remove(u: U) {
     if (!confirm(`Remove ${u.name}? Their past edits stay in page history.`)) return;
     try { await api(`/api/users/${u.id}`, undefined, 'DELETE'); setList(list.filter((x) => x.id !== u.id)); }
@@ -47,7 +51,7 @@ export default function Team({ users, me }: { users: U[]; me: number }) {
         <div>
           <div className="eyebrow">Team</div>
           <h1 className="title">Who can sign in</h1>
-          <p className="sub">Editors can create, edit and mark pages live. Admins can also manage the team.</p>
+          <p className="sub">Editors can create, edit and mark pages live. Admins can also manage the team. On body shop sites, editors save drafts and only publish if they’re allowed to below; otherwise they ask to publish.</p>
         </div>
       </div>
       {msg && <div className="notice ok" style={{ marginBottom: 14 }}>{msg}</div>}
@@ -55,7 +59,7 @@ export default function Team({ users, me }: { users: U[]; me: number }) {
 
       <div className="card table-scroll" style={{ marginBottom: 24 }}>
         <table className="table">
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th></th></tr></thead>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Publishes body shop sites</th><th></th></tr></thead>
           <tbody>
             {list.map((u) => (
               <tr key={u.id}>
@@ -65,6 +69,11 @@ export default function Team({ users, me }: { users: U[]; me: number }) {
                   <select className="select" style={{ width: 120 }} value={u.role} disabled={u.id === me} onChange={(e) => role(u, e.target.value)} aria-label={`Role for ${u.name}`}>
                     <option value="editor">Editor</option><option value="admin">Admin</option>
                   </select>
+                </td>
+                <td>
+                  {u.role === 'admin'
+                    ? <span className="small" style={{ color: 'var(--slate)' }}>Always (admin)</span>
+                    : <label className="row" style={{ gap: 6 }}><input type="checkbox" checked={!!u.bs_publish} onChange={(e) => bsPublish(u, e.target.checked)} /> Can publish</label>}
                 </td>
                 <td style={{ textAlign: 'right' }}>
                   {u.id !== me && <span className="row" style={{ justifyContent: 'flex-end' }}>

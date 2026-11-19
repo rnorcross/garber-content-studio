@@ -70,3 +70,16 @@ Without `BLOB_READ_WRITE_TOKEN` (local development), uploads are saved under `.d
 - Each page gets a meta title and description within Google's limits.
 
 Not pre-built: Garber Chevrolet Webster and Garber Subaru (now Parker Automotive, which uses different styling) and the two "(Overall)" campus rows. The Automall CDJR and Ford pages use the Automall campus photo; the Curtis Garber stores have no storefront photo yet, so their About page shows the original Garber building alone.
+
+## Body shop websites
+
+The Body Shop Websites section hosts and edits Garber's collision center sites (one codebase, each on its own domain). Each site is its approved pre-rendered pages plus an overlay of edits, so the design is never rewritten by the editor. See `lib/bodyshop.ts` for the model and rendering, `lib/bodyshop-info.ts` for Site Info, and `lib/bodyshop-ai.ts` for the Claude helpers.
+
+Extra setup for the body shop features:
+
+| Name | Value |
+|---|---|
+| `CRON_SECRET` | Any random string. Vercel Cron sends it to `/api/cron/body-shop` (scheduled publishing, every 15 minutes per `vercel.json`). |
+| `BODY_SHOP_HOSTS` | Optional JSON map of extra domains to sites, e.g. `{"garbermidlandbodyshop.com":"midland"}`. |
+
+Publishing rights: admins can always publish body shop sites; editors only when an admin ticks “Can publish” for them on the Team page.

@@ -13,9 +13,10 @@ export const POST = route(async (req, user) => {
   const { url, pathname } = await saveLocal(folder, safeName(file.name), Buffer.from(await file.arrayBuffer()));
   const dealershipId = form.get('dealershipId') ? Number(form.get('dealershipId')) : null;
   const [row] = await sql`
-    insert into media (url, pathname, filename, content_type, size, width, height, alt, dealership_id, uploaded_by)
+    insert into media (url, pathname, filename, content_type, size, width, height, alt, dealership_id, bs_site_id, uploaded_by)
     values (${url}, ${pathname}, ${file.name}, ${file.type}, ${file.size}, ${Number(form.get('width')) || null},
-            ${Number(form.get('height')) || null}, ${String(form.get('alt') || '') || null}, ${dealershipId}, ${user.id})
+            ${Number(form.get('height')) || null}, ${String(form.get('alt') || '') || null}, ${dealershipId},
+            ${form.get('bsSiteId') ? Number(form.get('bsSiteId')) : null}, ${user.id})
     returning *`;
   return json(row);
 });
