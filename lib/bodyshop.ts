@@ -240,6 +240,14 @@ export async function getPageByPath(siteId: number, p: string) {
   return pg ?? null;
 }
 
+/** Every page of a site with when it last went live, for sitemap.xml. */
+export async function listSitemapPages(siteId: number) {
+  return sql<{ path: string; published_at: string | null; noindex: boolean }[]>`
+    select path, published_at,
+           base_html ~* '<meta[^>]+name=["'']robots["''][^>]+noindex' as noindex
+    from bs_pages where site_id = ${siteId} order by path`;
+}
+
 export async function getPage(id: number) {
   await ensureBodyShop();
   const [pg] = await sql<BsPage[]>`select * from bs_pages where id = ${id}`;
