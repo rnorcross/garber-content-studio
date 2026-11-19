@@ -1,5 +1,5 @@
 import { unstable_cache } from 'next/cache';
-import { getSite, getPageByPath, renderPage, findRedirect, type BsPage } from '@/lib/bodyshop';
+import { getSite, getPageByPath, renderPage, findRedirect, checkSchedulesSoon, type BsPage } from '@/lib/bodyshop';
 import { siteForHost } from '@/lib/site-hosts';
 
 // Public body shop pages. A site's own domain is routed here by middleware.ts
@@ -32,6 +32,7 @@ const render = (slug: string, p: string, ownDomain: boolean) =>
 
 export async function GET(req: Request, { params }: { params: Promise<{ site: string; path?: string[] }> }) {
   const { site, path = [] } = await params;
+  checkSchedulesSoon(); // backstop for scheduled publishes if the cron hasn't run yet
   const p = '/' + path.map(decodeURIComponent).join('/') + (path.length ? '/' : '');
   // Judged by the Host header: after middleware's rewrite the path may already read /s/<slug>/.
   const onOwnDomain = siteForHost(req.headers.get('host')) === site;

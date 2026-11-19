@@ -1,7 +1,8 @@
 import { revalidateTag } from 'next/cache';
 import { sql } from '@/lib/db';
 import { route, json, fail } from '@/lib/api';
-import { getSite, editId, brokenEdits, cleanPath, type BsPage, type Edit } from '@/lib/bodyshop';
+import { randomBytes } from 'node:crypto';
+import { getSite, editId, brokenEdits, cleanPath, publishSite, canPublish, type BsPage, type Edit, type Announce } from '@/lib/bodyshop';
 import { cleanInfo } from '@/lib/bodyshop-info';
 
 type Ctx = { params: Promise<{ slug: string }> };
@@ -12,6 +13,10 @@ export const POST = route<Ctx>(async (req, user, ctx) => {
   const site = await getSite((await ctx.params).slug);
   if (!site) return fail('Site not found', 404);
   const b = await req.json();
+  // Anything that changes what visitors see right away needs publish rights.
+  if (['publish-all', 'schedule', 'redirect-add', 'redirect-remove', 'redirect-wordpress', 'domains'].includes(b.action) && !(await canPublish(user))) {
+    return fail('Publishing needs an admin or a teammate with publish rights. Use “Ask to publish”.', 403);
+  }
 
   switch (b.action) {
     case 'replace': {
@@ -26,16 +31,47 @@ export const POST = route<Ctx>(async (req, user, ctx) => {
       return json({ ok: true });
     }
     case 'publish-all': {
-      const pages = await sql<Pick<BsPage, 'id' | 'edits' | 'meta'>[]>`select id, edits, meta from bs_pages where site_id = ${site.id}`;
-      await sql.begin(async (tx) => {
-        await tx`update bs_pages set live_edits = edits, live_meta = meta, published_at = now(), published_by = ${user.name},
-          status = case when status = 'draft' then 'live' else status end
-          where site_id = ${site.id} and (live_edits <> edits or live_meta <> meta or status = 'draft')`;
-        await tx`update bs_sites set live_edits = edits, live_info = info, published_at = now() where id = ${site.id}`;
-        await tx`insert into bs_publishes (site_id, page_id, snapshot, note, user_name)
-          values (${site.id}, null, ${sql.json({ site: { edits: site.edits, info: site.info }, pages: pages.map((p) => ({ id: p.id, edits: p.edits, meta: p.meta })) } as any)}, 'Published whole site', ${user.name})`;
-      });
-      revalidateTag(`bs:${site.slug}`);
+      await publishSite(site.id, user.name);
+      return json({ ok: true });
+    }
+    case 'schedule': {
+      // Publish everything at a set time (cron, with page views as a backstop). null cancels.
+      const at = b.at ? new Date(b.at) : null;
+      if (at && (isNaN(+at) || +at < Date.now() - 60_000)) return fail('Pick a time in the future');
+      await sql`update bs_sites set publish_at = ${at}, publish_by = ${at ? user.name : null} where id = ${site.id}`;
+      return json({ ok: true });
+    }
+    case 'announce': {
+      const a: Announce = {};
+      const t = (v: unknown, n = 300) => (typeof v === 'string' && v.trim() ? v.trim().slice(0, n) : undefined);
+      a.text = t(b.text, 240); a.linkText = t(b.linkText, 40); a.href = t(b.href, 500);
+      for (const k of ['start', 'end'] as const) { const v = t(b[k]); if (v && !isNaN(Date.parse(v))) a[k] = new Date(v).toISOString(); }
+      a.color = (['navy', 'red', 'gold', 'green'] as const).find((c) => c === b.color) ?? 'navy';
+      if (a.href && !/^(https?:\/\/|\/|tel:)/.test(a.href)) return fail('Links start with https://, / or tel:');
+      await sql`update bs_sites set announce = ${sql.json((a.text ? a : {}) as any)} where id = ${site.id}`;
+      return json({ ok: true });
+    }
+    case 'preview-link': {
+      const days = Math.min(Math.max(Number(b.days) || 7, 1), 30);
+      const token = randomBytes(12).toString('base64url');
+      await sql`insert into bs_previews (token, site_id, created_by, expires_at) values (${token}, ${site.id}, ${user.name}, now() + ${days + ' days'}::interval)`;
+      return json({ ok: true, url: `/preview/${token}/`, days });
+    }
+    case 'request': {
+      await sql`insert into bs_requests (site_id, page_id, note, user_name) values (${site.id}, null, ${String(b.note || '').slice(0, 500) || null}, ${user.name})`;
+      return json({ ok: true });
+    }
+    case 'copy-edits': {
+      // Copy site-wide edits to other shops' drafts.
+      const pick = site.edits.filter((e) => (b.ids ?? []).includes(e.id));
+      const targets: string[] = Array.isArray(b.targets) ? b.targets.map(String) : [];
+      for (const slug of targets) {
+        if (slug === site.slug) continue;
+        const [t] = await sql<{ id: number; edits: Edit[] }[]>`select id, edits from bs_sites where slug = ${slug}`;
+        if (!t) continue;
+        const stamp = { at: new Date().toISOString(), by: user.name };
+        await sql`update bs_sites set edits = ${sql.json([...t.edits, ...pick.map((e) => ({ ...e, id: editId(), ...stamp }))] as any)} where id = ${t.id}`;
+      }
       return json({ ok: true });
     }
     case 'info': {

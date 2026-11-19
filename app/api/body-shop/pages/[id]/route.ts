@@ -1,7 +1,7 @@
 import { revalidateTag } from 'next/cache';
 import { sql } from '@/lib/db';
 import { route, json, fail, idOf, type IdCtx } from '@/lib/api';
-import { getPage, getSite, editId, norm, cleanPath, duplicatePage, type BsSite, type Edit } from '@/lib/bodyshop';
+import { getPage, getSite, editId, norm, cleanPath, duplicatePage, canPublish, type BsSite, type Edit } from '@/lib/bodyshop';
 
 // One endpoint for everything the page editor does, picked by `action`.
 export const POST = route<IdCtx>(async (req, user, ctx) => {
@@ -11,6 +11,10 @@ export const POST = route<IdCtx>(async (req, user, ctx) => {
   const [site] = await sql<BsSite[]>`select * from bs_sites where id = ${page.site_id}`;
   const b = await req.json();
   const stamp = { at: new Date().toISOString(), by: user.name };
+  // Anything that changes what visitors see right away needs publish rights.
+  if (['publish', 'status', 'delete'].includes(b.action) && !(await canPublish(user))) {
+    return fail('You can save drafts, but publishing needs an admin or a teammate with publish rights. Use “Ask to publish”.', 403);
+  }
 
   switch (b.action) {
     case 'edit': {
@@ -80,7 +84,8 @@ export const POST = route<IdCtx>(async (req, user, ctx) => {
       await sql.begin(async (tx) => {
         await tx`update bs_pages set live_edits = edits, live_meta = meta, published_at = now(), published_by = ${user.name},
           status = case when status = 'draft' then 'live' else status end where id = ${id}`;
-        await tx`update bs_sites set live_edits = edits, live_info = info, published_at = now() where id = ${site.id}`;
+        await tx`update bs_sites set live_edits = edits, live_info = info, live_announce = announce, published_at = now() where id = ${site.id}`;
+        await tx`update bs_requests set resolved_at = now(), resolved_by = ${user.name} where site_id = ${site.id} and (page_id = ${id} or page_id is null) and resolved_at is null`;
         await tx`insert into bs_publishes (site_id, page_id, snapshot, note, user_name)
           values (${site.id}, ${id}, ${sql.json({ page: { edits: page.edits, meta: page.meta }, site: { edits: site.edits, info: site.info } } as any)}, ${b.note ?? null}, ${user.name})`;
       });
@@ -127,6 +132,26 @@ export const POST = route<IdCtx>(async (req, user, ctx) => {
       });
       revalidateTag(`bs:${site.slug}`);
       return json({ ok: true });
+    }
+    case 'request': {
+      // An editor without publish rights asks for this page to be published.
+      await sql`insert into bs_requests (site_id, page_id, note, user_name) values (${site.id}, ${id}, ${String(b.note || '').slice(0, 500) || null}, ${user.name})`;
+      return json({ ok: true });
+    }
+    case 'copy-to-sites': {
+      // Copy one of this page's edits to the page at the same address on other shops (as drafts).
+      const e = page.edits.find((x) => x.id === b.id);
+      if (!e) return fail('Edit not found');
+      const targets: string[] = Array.isArray(b.targets) ? b.targets.map(String) : [];
+      const done: string[] = [], missing: string[] = [];
+      for (const slug of targets) {
+        const [t] = await sql<{ id: number; edits: Edit[] }[]>`
+          select p.id, p.edits from bs_pages p join bs_sites s on s.id = p.site_id where s.slug = ${slug} and p.path = ${page.path}`;
+        if (!t) { missing.push(slug); continue; }
+        await sql`update bs_pages set edits = ${sql.json([...t.edits, { ...e, id: editId(), ...stamp }] as any)}, updated_at = now() where id = ${t.id}`;
+        done.push(slug);
+      }
+      return json({ ok: true, done, missing });
     }
     case 'discard': {
       await sql`update bs_pages set edits = live_edits, meta = live_meta, updated_at = now() where id = ${id}`;

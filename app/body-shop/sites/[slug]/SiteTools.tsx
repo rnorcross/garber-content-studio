@@ -3,12 +3,18 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/client';
-import type { Edit } from '@/lib/bodyshop';
+import type { Edit, Announce } from '@/lib/bodyshop';
+import PublishCard from './PublishCard';
+import AnnounceCard from './AnnounceCard';
+import CopyToShops from '@/components/CopyToShops';
 
 /** Site-wide changes: find & replace on every page, publish everything, domains. */
-export default function SiteTools({ slug, edits, liveEdits, domains, waiting, redirects }: {
+export default function SiteTools({ slug, edits, liveEdits, domains, waiting, redirects, canPublish, publishAt, publishBy, requests, announce, liveAnnounce, others }: {
   slug: string; edits: Edit[]; liveEdits: Edit[]; domains: string[]; waiting: number;
   redirects: { id: number; from_path: string; to_path: string; note: string | null; created_by: string | null }[];
+  canPublish: boolean; publishAt: string | null; publishBy: string | null;
+  requests: { id: number; user_name: string; note: string | null; created_at: string; page_title: string | null }[];
+  announce: Announce; liveAnnounce: Announce; others: { slug: string; name: string }[];
 }) {
   const router = useRouter();
   const [rFrom, setRFrom] = useState('');
@@ -36,19 +42,7 @@ export default function SiteTools({ slug, edits, liveEdits, domains, waiting, re
 
   return (
     <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', marginBottom: 8 }}>
-      <div className="card card-pad stack">
-        <div>
-          <div className="bs-card-title" style={{ marginTop: 0 }}>Publish</div>
-          <p className="sub" style={{ fontSize: 13.5 }}>
-            {waiting ? `${waiting} ${waiting === 1 ? 'change is' : 'changes are'} waiting. Publishing puts every page’s edits live within a few seconds.` : 'Everything on this site is live.'}
-          </p>
-        </div>
-        <div className="row">
-          <button className="btn primary" disabled={!waiting || !!busy} onClick={() => run('publish', { action: 'publish-all' })}>
-            {busy === 'publish' ? 'Publishing…' : 'Publish all changes'}
-          </button>
-        </div>
-      </div>
+      <PublishCard slug={slug} waiting={waiting} canPublish={canPublish} publishAt={publishAt} publishBy={publishBy} requests={requests} />
 
       <div className="card card-pad stack">
         <div>
@@ -98,7 +92,11 @@ export default function SiteTools({ slug, edits, liveEdits, domains, waiting, re
 
       {edits.length > 0 && (
         <div className="card card-pad stack" style={{ gridColumn: '1 / -1' }}>
-          <div className="bs-card-title" style={{ marginTop: 0 }}>Site-wide changes</div>
+          <div className="row" style={{ justifyContent: 'space-between' }}>
+            <div className="bs-card-title" style={{ marginTop: 0 }}>Site-wide changes</div>
+            <CopyToShops others={others} label="Copy these to other shops"
+              onCopy={async (targets) => { await api(`/api/body-shop/sites/${slug}`, { action: 'copy-edits', ids: edits.map((e) => e.id), targets }); }} />
+          </div>
           {edits.map((e) => (
             <div key={e.id} className="bs-edit">
               <span className={'chip' + (live.has(e.id) ? ' ok' : ' warn')}>{live.has(e.id) ? 'Live' : 'Draft'}</span>
@@ -113,6 +111,8 @@ export default function SiteTools({ slug, edits, liveEdits, domains, waiting, re
         </div>
       )}
 
+      <AnnounceCard slug={slug} announce={announce} live={liveAnnounce} />
+
       <div className="card card-pad stack" style={{ gridColumn: '1 / -1' }}>
         <div>
           <div className="bs-card-title" style={{ marginTop: 0 }}>Redirects · {redirects.length}</div>
@@ -124,7 +124,7 @@ export default function SiteTools({ slug, edits, liveEdits, domains, waiting, re
         <div className="row" style={{ flexWrap: 'nowrap' }}>
           <input className="input" placeholder="Old address, e.g. /about-rf-collision/" value={rFrom} onChange={(e) => setRFrom(e.target.value)} />
           <input className="input" placeholder="Goes to, e.g. /about-garber-collision-center/" value={rTo} onChange={(e) => setRTo(e.target.value)} />
-          <button className="btn dark" disabled={!rFrom.trim() || !rTo.trim() || !!busy}
+          <button className="btn dark" disabled={!canPublish || !rFrom.trim() || !rTo.trim() || !!busy} title={canPublish ? '' : 'Redirects go live right away, so they need publish rights'}
             onClick={async () => { if (await run('redir', { action: 'redirect-add', from: rFrom, to: rTo })) { setRFrom(''); setRTo(''); } }}>Add</button>
         </div>
         <div className="row">

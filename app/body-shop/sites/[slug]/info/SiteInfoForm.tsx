@@ -8,7 +8,7 @@ const DAY_LABEL: Record<string, string> = { mon: 'Monday', tue: 'Tuesday', wed: 
 const SOCIAL_LABEL: Record<string, string> = { facebook: 'Facebook', instagram: 'Instagram', tiktok: 'TikTok', youtube: 'YouTube', linkedin: 'LinkedIn' };
 const closedWeek = () => Object.fromEntries(DAYS.map((d) => [d, null])) as Hours;
 
-export default function SiteInfoForm({ slug, base, info, live }: { slug: string; base: SiteInfo; info: SiteInfo; live: SiteInfo }) {
+export default function SiteInfoForm({ slug, base, info, live, canPublish }: { slug: string; base: SiteInfo; info: SiteInfo; live: SiteInfo; canPublish: boolean }) {
   const router = useRouter();
   const [f, setF] = useState<SiteInfo>(() => ({ ...info, hours: info.hours ?? base.hours ?? closedWeek(), social: { ...(info.social ?? {}) } }));
   const [leads, setLeads] = useState((info.leadEmails ?? []).join(', '));
@@ -120,10 +120,10 @@ export default function SiteInfoForm({ slug, base, info, live }: { slug: string;
       {msg && <p className="sub" style={{ color: 'var(--ok)' }}>{msg}</p>}
       <div className="row">
         <button className="btn dark" disabled={!!busy} onClick={() => save(false)}>{busy === 'save' ? 'Saving…' : 'Save to draft'}</button>
-        <button className="btn primary" disabled={!!busy} onClick={() => save(true)}>{busy === 'publish' ? 'Publishing…' : 'Save and publish'}</button>
+        {canPublish && <button className="btn primary" disabled={!!busy} onClick={() => save(true)}>{busy === 'publish' ? 'Publishing…' : 'Save and publish'}</button>}
         {draftDiffers && <span className="chip warn">Draft differs from live</span>}
       </div>
-      <p className="sub" style={{ fontSize: 12.5 }}>“Save and publish” also publishes any other waiting changes on this site.</p>
+      <p className="sub" style={{ fontSize: 12.5 }}>{canPublish ? '“Save and publish” also publishes any other waiting changes on this site.' : 'Saved changes go live when someone with publish rights publishes the site.'}</p>
     </div>
   );
 }

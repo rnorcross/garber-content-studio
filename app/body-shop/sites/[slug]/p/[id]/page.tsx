@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import TopBar from '@/components/TopBar';
-import { getPage, getSite, pageChanged, brokenEdits } from '@/lib/bodyshop';
+import { getPage, getSite, pageChanged, brokenEdits, canPublish } from '@/lib/bodyshop';
 import PageEditor from './PageEditor';
 
 export const dynamic = 'force-dynamic';
@@ -33,6 +33,8 @@ export default async function EditPage({ params }: { params: Promise<{ slug: str
         site={{ slug: site.slug, name: site.name, edits: site.edits, liveEdits: site.live_edits }}
         page={{ id: page.id, path: page.path, title: page.title, meta: page.meta, liveMeta: page.live_meta, edits: page.edits, liveEdits: page.live_edits, publishedAt: page.published_at, publishedBy: page.published_by, status: page.status }}
         pages={pages}
+        canPublish={await canPublish(user)}
+        others={await sql<{ slug: string; name: string }[]>`select slug, name from bs_sites where id <> ${site.id} order by name`}
         orig={orig}
         changed={pageChanged(site, page)}
         broken={broken}

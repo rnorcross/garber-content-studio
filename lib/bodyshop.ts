@@ -7,6 +7,7 @@
 import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import * as cheerio from 'cheerio';
+import { revalidateTag } from 'next/cache';
 import { sql } from './db';
 import { detectInfo, cleanInfo, infoReplacements, infoChanged, type SiteInfo } from './bodyshop-info';
 
@@ -41,7 +42,15 @@ export type BsSite = {
   edits: Edit[]; live_edits: Edit[]; published_at: string | null; created_at: string;
   /** Site Info: draft, what's live, and the values the approved pages were built with. */
   info: SiteInfo; live_info: SiteInfo; info_base: SiteInfo;
+  /** Announcement bar: draft and live. */
+  announce: Announce; live_announce: Announce;
+  /** A scheduled "publish everything", and who set it. */
+  publish_at: string | null; publish_by: string | null;
 };
+
+/** A bar across the top of every page: holiday hours, closures, a promotion. */
+export type Announce = { text?: string; linkText?: string; href?: string; start?: string; end?: string; color?: 'navy' | 'red' | 'gold' | 'green' };
+const ANNOUNCE_BG = { navy: '#002256', red: '#b3261e', gold: '#b8922f', green: '#0a6b45' } as const;
 export type BsPage = {
   id: number; site_id: number; path: string; title: string; base_html: string;
   meta: Meta; live_meta: Meta; edits: Edit[]; live_edits: Edit[];
@@ -115,6 +124,30 @@ create table if not exists bs_redirects (
   created_at  timestamptz not null default now(),
   unique (site_id, from_path)
 );
+alter table bs_sites add column if not exists announce      jsonb not null default '{}';
+alter table bs_sites add column if not exists live_announce jsonb not null default '{}';
+alter table bs_sites add column if not exists publish_at    timestamptz;
+alter table bs_sites add column if not exists publish_by    text;
+alter table users add column if not exists bs_publish boolean not null default false;
+-- Share links for unpublished changes: anyone with the link sees the draft, until it expires.
+create table if not exists bs_previews (
+  token       text primary key,
+  site_id     int not null references bs_sites(id) on delete cascade,
+  created_by  text,
+  created_at  timestamptz not null default now(),
+  expires_at  timestamptz not null
+);
+-- "Ask to publish" from editors who can't publish.
+create table if not exists bs_requests (
+  id          serial primary key,
+  site_id     int not null references bs_sites(id) on delete cascade,
+  page_id     int references bs_pages(id) on delete cascade,
+  note        text,
+  user_name   text,
+  created_at  timestamptz not null default now(),
+  resolved_at timestamptz,
+  resolved_by text
+);
 `;
 
 let ready: Promise<void> | null = null;
@@ -185,7 +218,7 @@ if(e.kind==='text')el.innerHTML=e.to;else if(e.kind==='hide')el.setAttribute('da
 else if(e.kind==='alt')el.setAttribute('alt',e.to);
 else{el.setAttribute('href',e.to);if(e.newTab===true){el.setAttribute('target','_blank');el.setAttribute('rel','noopener')}else if(e.newTab===false)el.removeAttribute('target')}
 m.push(e.id);el.setAttribute('data-ws',m.join(' '))}}
-if(L){var as=root.querySelectorAll('a[href^="/"]');for(var k=0;k<as.length;k++){var h=as[k].getAttribute('href');if(!/^\\/(\\/|s\\/|sites\\/)/.test(h))as[k].setAttribute('href',L+h)}}};
+if(L){var as=root.querySelectorAll('a[href^="/"]');for(var k=0;k<as.length;k++){var h=as[k].getAttribute('href');if(!/^\\/(\\/|s\\/|sites\\/|preview\\/)/.test(h))as[k].setAttribute('href',L+h)}}};
 if(document.readyState!=='loading')window.__wsApply(document.getElementById('app'));else document.addEventListener('DOMContentLoaded',function(){window.__wsApply(document.getElementById('app'))});})();`;
 
 /** The server half of the overlay: the same rules as APPLY_JS, on the parsed page. */
@@ -236,7 +269,7 @@ function applyServer($: cheerio.CheerioAPI, app: cheerio.Cheerio<any>, edits: Ed
  * opts.misses: collects the ids of edits that no longer match anything on the page.
  */
 export function renderPage(
-  site: Pick<BsSite, 'slug' | 'edits' | 'live_edits'> & Partial<Pick<BsSite, 'info' | 'live_info' | 'info_base'>>,
+  site: Pick<BsSite, 'slug' | 'edits' | 'live_edits'> & Partial<Pick<BsSite, 'info' | 'live_info' | 'info_base' | 'announce' | 'live_announce'>>,
   page: BsPage, mode: 'live' | 'draft' | 'edit',
   opts: { linkBase?: string; misses?: Set<string> } = {},
 ) {
@@ -279,6 +312,11 @@ export function renderPage(
   }
   if (meta.noindex) $('head').append('<meta name="robots" content="noindex">');
 
+  // Announcement bar: outside #app, so the page script never re-draws over it. Start and end
+  // times are checked in the browser too, since a cached page can outlive the end time.
+  const ann = live ? site.live_announce : site.announce;
+  if (ann?.text) $('body').prepend(announceHtml(ann, opts.linkBase));
+
   // 4. Text, image, link and alt-text edits on the server-rendered page.
   const app = $('#app');
   applyServer($, app, edits, opts.misses);
@@ -288,7 +326,7 @@ export function renderPage(
   const lb = opts.linkBase || '';
   if (lb) app.find('a[href^="/"]').each((_, el) => {
     const h = $(el).attr('href')!;
-    if (!/^\/(\/|s\/|sites\/)/.test(h)) $(el).attr('href', lb + h);
+    if (!/^\/(\/|s\/|sites\/|preview\/)/.test(h)) $(el).attr('href', lb + h);
   });
 
   const overlay = edits.filter((e) => e.kind !== 'replace').map((e) => {
@@ -308,6 +346,16 @@ export function renderPage(
     if (!live) $('head').append('<meta name="robots" content="noindex">');
   }
   return $.html();
+}
+
+function announceHtml(a: Announce, linkBase = '') {
+  const bg = ANNOUNCE_BG[a.color ?? 'navy'] ?? ANNOUNCE_BG.navy;
+  const href = a.href && a.href.startsWith('/') && !a.href.startsWith('//') ? linkBase + a.href : a.href;
+  const link = href && a.linkText ? ` <a href="${esc(href)}" style="color:#fff;font-weight:700;text-decoration:underline;margin-left:6px">${esc(a.linkText)}</a>` : '';
+  const s = a.start ? Date.parse(a.start) : 0, e = a.end ? Date.parse(a.end) : 0;
+  return `<div id="ws-announce" data-start="${s || ''}" data-end="${e || ''}" role="region" aria-label="Announcement"
+    style="background:${bg};color:#fff;font:600 14px/1.4 Roboto,Arial,sans-serif;text-align:center;padding:10px 16px;position:relative;z-index:60">${esc(a.text!)}${link}</div>
+  <script>(function(){var b=document.getElementById('ws-announce'),n=Date.now(),s=+b.dataset.start||0,e=+b.dataset.end||0;if((s&&n<s)||(e&&n>e))b.style.display='none'})();</script>`;
 }
 
 /** Edits on a page (its own and the site's) that no longer match anything, by id. */
@@ -331,7 +379,7 @@ const EDIT_JS = `(function(){
 var TEXT='h1,h2,h3,h4,h5,h6,p,li,a,span,strong,em,b,button,label,td,th,blockquote,figcaption,small,div';
 var APP=document.getElementById('app');
 function n(s){return (s||'').replace(/\\s+/g,' ').trim()}
-function editable(el){if(!el||el.nodeType!==1)return null;
+function editable(el){if(!el||el.nodeType!==1||!APP.contains(el))return null;
  while(el&&el!==APP&&el!==document.body){if(el.tagName==='IMG')return el;if(leaf(el))return el;el=el.parentNode}return null}
 function leaf(el){if(!el.matches||!el.matches(TEXT)||!n(el.textContent))return false;
  if(el.tagName==='DIV')return el.children.length===0;
@@ -480,8 +528,54 @@ export function pageChanged(site: BsSite, page: BsPage) {
 }
 
 /** True when the site's own changes (site-wide edits, Site Info) aren't live yet. */
-export const siteChanged = (site: Pick<BsSite, 'edits' | 'live_edits' | 'info' | 'live_info'>) =>
-  JSON.stringify(site.edits) !== JSON.stringify(site.live_edits) || infoChanged(site.info, site.live_info);
+export const siteChanged = (site: Pick<BsSite, 'edits' | 'live_edits' | 'info' | 'live_info'> & Partial<Pick<BsSite, 'announce' | 'live_announce'>>) =>
+  JSON.stringify(site.edits) !== JSON.stringify(site.live_edits) || infoChanged(site.info, site.live_info)
+  || JSON.stringify(site.announce ?? {}) !== JSON.stringify(site.live_announce ?? {});
+
+/**
+ * Publishes everything waiting on a site: every page's edits and search settings, new pages,
+ * site-wide edits, Site Info and the announcement bar. Keeps a snapshot for history.
+ */
+export async function publishSite(siteId: number, userName: string, note = 'Published whole site') {
+  const [site] = await sql<BsSite[]>`select * from bs_sites where id = ${siteId}`;
+  if (!site) return;
+  const pages = await sql<Pick<BsPage, 'id' | 'edits' | 'meta'>[]>`select id, edits, meta from bs_pages where site_id = ${site.id}`;
+  await sql.begin(async (tx) => {
+    await tx`update bs_pages set live_edits = edits, live_meta = meta, published_at = now(), published_by = ${userName},
+      status = case when status = 'draft' then 'live' else status end
+      where site_id = ${site.id} and (live_edits <> edits or live_meta <> meta or status = 'draft')`;
+    await tx`update bs_sites set live_edits = edits, live_info = info, live_announce = announce, published_at = now(),
+      publish_at = null, publish_by = null where id = ${site.id}`;
+    await tx`insert into bs_publishes (site_id, page_id, snapshot, note, user_name)
+      values (${site.id}, null, ${sql.json({ site: { edits: site.edits, info: site.info, announce: site.announce }, pages: pages.map((p) => ({ id: p.id, edits: p.edits, meta: p.meta })) } as any)}, ${note}, ${userName})`;
+    await tx`update bs_requests set resolved_at = now(), resolved_by = ${userName} where site_id = ${site.id} and resolved_at is null`;
+  });
+  revalidateTag(`bs:${site.slug}`);
+}
+
+/** Runs scheduled publishes that are due. Called by the cron route and, as a backstop, by page views. */
+export async function runDueSchedules() {
+  await ensureBodyShop();
+  const due = await sql<{ id: number; publish_by: string | null }[]>`select id, publish_by from bs_sites where publish_at is not null and publish_at <= now()`;
+  for (const d of due) await publishSite(d.id, d.publish_by ? `${d.publish_by} (scheduled)` : 'Scheduled publish', 'Scheduled publish');
+  return due.length;
+}
+
+let lastCheck = 0;
+/** At most once a minute per server instance: publish anything whose scheduled time has passed. */
+export function checkSchedulesSoon() {
+  if (Date.now() - lastCheck < 60_000) return;
+  lastCheck = Date.now();
+  runDueSchedules().catch((e) => console.error('scheduled publish', e));
+}
+
+/** Admins can always publish; editors only when an admin has allowed it on the Team page. */
+export async function canPublish(user: { id: number; role: string }) {
+  if (user.role === 'admin') return true;
+  await ensureBodyShop();
+  const [u] = await sql<{ bs_publish: boolean }[]>`select bs_publish from users where id = ${user.id}`;
+  return !!u?.bs_publish;
+}
 
 export const editId = () => Math.random().toString(36).slice(2, 10);
 export { esc, escRe };

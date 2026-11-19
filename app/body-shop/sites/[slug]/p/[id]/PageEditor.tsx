@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { api } from '@/lib/client';
+import { api, copyText } from '@/lib/client';
+import CopyToShops from '@/components/CopyToShops';
 import MediaPicker from '@/components/MediaPicker';
 import type { Edit, Meta, PageStatus } from '@/lib/bodyshop';
 
@@ -17,6 +18,8 @@ type Props = {
   broken: string[];
   history: { id: number; user_name: string; created_at: string; note: string | null }[];
   pages: { path: string; title: string }[];
+  canPublish: boolean;
+  others: { slug: string; name: string }[];
 };
 
 type Scan = {
@@ -31,7 +34,7 @@ const fmt = (d: string) => new Date(d).toLocaleString('en-US', { dateStyle: 'med
 const KIND: Record<Edit['kind'], string> = { text: 'Text', img: 'Image', link: 'Link', alt: 'Alt text', replace: 'Replace', hide: 'Hidden', dup: 'Added item' };
 const plain = (h: string) => h.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
-export default function PageEditor({ site, page, orig, changed, broken, history, pages }: Props) {
+export default function PageEditor({ site, page, orig, changed, broken, history, pages, canPublish, others }: Props) {
   const router = useRouter();
   const frame = useRef<HTMLIFrameElement>(null);
   const scrollY = useRef(0);
@@ -67,6 +70,15 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
   // Page tab.
   const [dup, setDup] = useState({ path: '', title: '', description: '', headline: '' });
   const [redirectTo, setRedirectTo] = useState('/');
+  const [shared, setShared] = useState('');
+
+  async function sharePreview() {
+    try {
+      const r = await api(`/api/body-shop/sites/${site.slug}`, { action: 'preview-link', days: 7 });
+      const url = `${location.origin}${r.url.replace(/\/$/, '')}${page.path}`;
+      await copyText(url); setShared(url);
+    } catch (e: any) { setErr(e.message); }
+  }
 
   const refresh = useCallback(() => { setV((n) => n + 1); router.refresh(); }, [router]);
 
@@ -159,6 +171,12 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
         </>
       )}
       {e.by && <div className="bs-change-by">{e.by} · {e.at ? fmt(e.at) : ''}</div>}
+      {e.scope === 'page' && (
+        <CopyToShops others={others} onCopy={async (targets) => {
+          const r = await api(`/api/body-shop/pages/${page.id}`, { action: 'copy-to-sites', id: e.id, targets });
+          return `Copied to ${r.done.length} ${r.done.length === 1 ? 'shop' : 'shops'}${r.missing.length ? `; ${r.missing.length} don’t have a page at ${page.path}` : ''}.`;
+        }} />
+      )}
     </div>
   );
 
@@ -185,9 +203,17 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
             <button className={width === 'phone' ? 'on' : ''} onClick={() => setWidth('phone')}>Phone</button>
           </div>
           <a className="btn sm" href={`/s/${site.slug}${page.path}`} target="_blank" rel="noreferrer">Open ↗</a>
-          <button className="btn primary" disabled={!changed || !!busy} onClick={() => act('publish', { action: 'publish' })}>
-            {busy === 'publish' ? 'Publishing…' : changed ? 'Publish' : 'Published'}
-          </button>
+          <button className="btn sm" onClick={sharePreview} title="A link anyone can open for 7 days to see the unpublished changes">Share preview</button>
+          {canPublish ? (
+            <button className="btn primary" disabled={!changed || !!busy} onClick={() => act('publish', { action: 'publish' })}>
+              {busy === 'publish' ? 'Publishing…' : changed ? 'Publish' : 'Published'}
+            </button>
+          ) : (
+            <button className="btn primary" disabled={!changed || !!busy}
+              onClick={async () => { const note = prompt('Optional note for whoever publishes it:') ?? ''; if (await act('req', { action: 'request', note })) setShared('Asked to publish. It shows on the Overview.'); }}>
+              Ask to publish
+            </button>
+          )}
         </div>
       </header>
 
@@ -212,6 +238,7 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
             ))}
           </div>
           {err && <p className="bs-err">{err}</p>}
+          {shared && <p className="bs-change-by" style={{ wordBreak: 'break-all' }}>{shared.startsWith('http') ? <>Preview link copied: <a href={shared} target="_blank" rel="noreferrer">{shared}</a></> : shared}</p>}
 
           {tab === 'changes' && (
             <div className="stack">
@@ -421,14 +448,14 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
                         <span className="hint">A permanent (301) redirect, so search rankings carry over. Leave empty for “page not found.”</span>
                       </div>
                       <div className="row">
-                        <button className="btn sm" disabled={!!busy} onClick={() => act('status', { action: 'status', status: 'hidden', redirectTo: redirectTo.trim() || null })}>Hide page</button>
-                        <button className="btn sm ghost danger" disabled={!!busy}
+                        <button className="btn sm" disabled={!!busy || !canPublish} onClick={() => act('status', { action: 'status', status: 'hidden', redirectTo: redirectTo.trim() || null })}>Hide page</button>
+                        <button className="btn sm ghost danger" disabled={!!busy || !canPublish}
                           onClick={async () => {
                             if (!confirm(`Delete “${page.title}”? Its edits and history go with it.`)) return;
                             if (await act('del', { action: 'delete', redirectTo: redirectTo.trim() || null })) router.push(`/body-shop/sites/${site.slug}`);
                           }}>Delete page</button>
                       </div>
-                      <span className="hint">Hide keeps the page so you can put it back. Delete removes it for good.</span>
+                      <span className="hint">Hide keeps the page so you can put it back. Delete removes it for good.{canPublish ? '' : ' Both take effect right away, so they need publish rights.'}</span>
                     </>
                   )}
                 </div>

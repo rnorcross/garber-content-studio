@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import TopBar from '@/components/TopBar';
-import { getSite, siteChanged, type BsPage } from '@/lib/bodyshop';
+import { getSite, siteChanged, canPublish, type BsPage } from '@/lib/bodyshop';
 import SiteTools from './SiteTools';
 
 export const dynamic = 'force-dynamic';
@@ -26,6 +26,11 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
     from bs_pages where site_id = ${site.id} order by path`;
   const redirects = await sql<{ id: number; from_path: string; to_path: string; note: string | null; created_by: string | null }[]>`
     select id, from_path, to_path, note, created_by from bs_redirects where site_id = ${site.id} order by from_path`;
+  const requests = await sql<{ id: number; user_name: string; note: string | null; created_at: string; page_title: string | null }[]>`
+    select r.id, r.user_name, r.note, r.created_at, p.title as page_title from bs_requests r left join bs_pages p on p.id = r.page_id
+    where r.site_id = ${site.id} and r.resolved_at is null order by r.created_at desc`;
+  const others = await sql<{ slug: string; name: string }[]>`select slug, name from bs_sites where id <> ${site.id} order by name`;
+  const publisher = await canPublish(user);
   const waiting = pages.filter((p) => p.changed).length + (siteChanged(site) ? 1 : 0);
 
   return (
@@ -43,7 +48,9 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
           </div>
         </div>
 
-        <SiteTools slug={site.slug} edits={site.edits} liveEdits={site.live_edits} domains={site.domains} waiting={waiting} redirects={redirects} />
+        <SiteTools slug={site.slug} edits={site.edits} liveEdits={site.live_edits} domains={site.domains} waiting={waiting} redirects={redirects}
+          canPublish={publisher} publishAt={site.publish_at ? new Date(site.publish_at).toISOString() : null} publishBy={site.publish_by} requests={JSON.parse(JSON.stringify(requests))}
+          announce={site.announce} liveAnnounce={site.live_announce} others={others} />
 
         {GROUPS.map(([label, test]) => {
           const list = pages.filter((p) => test(p.path));

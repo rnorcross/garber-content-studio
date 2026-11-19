@@ -295,3 +295,4 @@ body:has(.side) { padding-left: var(--side-w); }
 .bs-section-name { all: unset; cursor: pointer; display: flex; flex-direction: column; min-width: 0; flex: 1; font-weight: 650; font-size: 13.5px; }
 .bs-section-name .off { opacity: 0.45; text-decoration: line-through; }
 .bs-section-name span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bs-copy { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; border: 1px dashed var(--line-strong); border-radius: var(--radius); }

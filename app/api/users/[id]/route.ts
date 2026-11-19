@@ -8,6 +8,8 @@ export const PATCH = route<IdCtx>(async (req, user, ctx) => {
   const b = await req.json();
   if (b.role && id === user.id) return fail('You can’t change your own role');
   if (b.role) await sql`update users set role = ${b.role === 'admin' ? 'admin' : 'editor'} where id = ${id}`;
+  // Body shop sites: whether an editor can publish (admins always can).
+  if ('bsPublish' in b) await sql`update users set bs_publish = ${!!b.bsPublish} where id = ${id}`;
   if (b.password) {
     if (String(b.password).length < 8) return fail('Password must be at least 8 characters');
     await sql`update users set password_hash = ${await hashPassword(String(b.password))}, must_reset = true where id = ${id}`;

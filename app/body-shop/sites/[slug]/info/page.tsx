@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import TopBar from '@/components/TopBar';
-import { getSite } from '@/lib/bodyshop';
+import { getSite, canPublish } from '@/lib/bodyshop';
 import SiteInfoForm from './SiteInfoForm';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +22,7 @@ export default async function SiteInfoPage({ params }: { params: Promise<{ slug:
             <p className="sub">The shop’s details in one place. A change here updates every page that shows it: header, footer, contact blocks, hours lists and the business details Google reads.</p>
           </div>
         </div>
-        <SiteInfoForm slug={site.slug} base={site.info_base} info={site.info} live={site.live_info} />
+        <SiteInfoForm slug={site.slug} base={site.info_base} info={site.info} live={site.live_info} canPublish={await canPublish(user)} />
       </main>
     </>
   );
