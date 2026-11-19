@@ -7,7 +7,7 @@ import { siteForHost } from '@/lib/site-hosts';
 // on the studio's own address, which is how a site is checked before DNS moves.
 // Pages are cached until someone publishes, which clears the site's tag.
 
-const render = (slug: string, p: string) =>
+const render = (slug: string, p: string, ownDomain: boolean) =>
   unstable_cache(
     async () => {
       const site = await getSite(slug);
@@ -19,26 +19,26 @@ const render = (slug: string, p: string) =>
         return nf ? { status: 404, html: null as string | null, redirect: null as string | null } : null;
       }
       if (page.path !== p) return { status: 308, html: null, redirect: page.path };
-      return { status: 200, html: renderPage(site, page, 'live'), redirect: null };
+      return { status: 200, html: renderPage(site, page, 'live', { linkBase: ownDomain ? '' : `/s/${slug}` }), redirect: null };
     },
     // Keyed to the deployment, so a new release of the renderer never serves pages cached by the old one.
-    ['bs-page', process.env.VERCEL_DEPLOYMENT_ID || process.env.VERCEL_GIT_COMMIT_SHA || 'local', slug, p],
+    ['bs-page', process.env.VERCEL_DEPLOYMENT_ID || process.env.VERCEL_GIT_COMMIT_SHA || 'local', slug, p, ownDomain ? 'own' : 'studio'],
     { tags: [`bs:${slug}`] },
   )();
 
 export async function GET(req: Request, { params }: { params: Promise<{ site: string; path?: string[] }> }) {
   const { site, path = [] } = await params;
   const p = '/' + path.map(decodeURIComponent).join('/') + (path.length ? '/' : '');
-  const out = await render(site, p);
-  if (!out) return new Response('Not found', { status: 404 });
-  const u = new URL(req.url);
   // Judged by the Host header: after middleware's rewrite the path may already read /s/<slug>/.
   const onOwnDomain = siteForHost(req.headers.get('host')) === site;
+  const out = await render(site, p, onOwnDomain);
+  if (!out) return new Response('Not found', { status: 404 });
+  const u = new URL(req.url);
   if (out.redirect) {
     return Response.redirect(new URL((onOwnDomain ? '' : `/s/${site}`) + out.redirect, u), 308);
   }
   if (out.status === 404) {
-    return new Response('<!doctype html><title>Page not found</title><p style="font-family:sans-serif;padding:40px">Page not found. <a href="/">Go to the home page</a></p>', { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } });
+    return new Response('<!doctype html><title>Page not found</title><p style="font-family:sans-serif;padding:40px">Page not found. <a href="' + (onOwnDomain ? '/' : `/s/${site}/`) + '">Go to the home page</a></p>', { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } });
   }
   return new Response(out.html, {
     headers: {

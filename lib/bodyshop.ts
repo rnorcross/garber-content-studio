@@ -144,7 +144,10 @@ if(document.readyState!=='loading')window.__wsApply(document.getElementById('app
  *   draft: the current unpublished state, fully interactive.
  *   edit: the draft with the site's scripts removed and the click-to-edit layer added.
  */
-export function renderPage(site: Pick<BsSite, 'slug' | 'edits' | 'live_edits'>, page: BsPage, mode: 'live' | 'draft' | 'edit') {
+export function renderPage(
+  site: Pick<BsSite, 'slug' | 'edits' | 'live_edits'>, page: BsPage, mode: 'live' | 'draft' | 'edit',
+  opts: { linkBase?: string } = {},
+) {
   const live = mode === 'live';
   const edits: Edit[] = [...(live ? site.live_edits : site.edits), ...(live ? page.live_edits : page.edits)];
   const meta: Meta = live ? page.live_meta : page.meta;
@@ -160,6 +163,13 @@ export function renderPage(site: Pick<BsSite, 'slug' | 'edits' | 'live_edits'>, 
     .replace(/(["'(\s,])\/(img|js|fonts|og|video)\//g, `$1${base}/$2/`)
     .replace(/(["'])\/favicon\.webp/g, `$1${base}/favicon.webp`)
     .replace(/runtime\.js\?v=[a-z0-9]+/, 'runtime.js?v=ws1');
+
+  // 2b. On the studio's address (/s/<slug>/...), the pages' own links ("/contact-us/") would land
+  //     on the studio's root. Point them inside the site. On the shop's own domain there's no base.
+  if (opts.linkBase) {
+    const lb = opts.linkBase;
+    html = html.replace(/(\bhref=["'])\/(?!\/|sites\/|s\/)/g, `$1${lb}/`);
+  }
 
   const $ = cheerio.load(html);
 
