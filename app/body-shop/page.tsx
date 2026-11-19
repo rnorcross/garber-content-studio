@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { requireUser } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import TopBar from '@/components/TopBar';
-import { ensureBodyShop, ROSTER, type BsSite } from '@/lib/bodyshop';
+import { ensureBodyShop, siteChanged, ROSTER, type BsSite } from '@/lib/bodyshop';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +13,7 @@ export default async function BodyShopOverview() {
     select s.*, count(p.id)::int as pages,
       count(p.id) filter (where p.edits <> p.live_edits or p.meta <> p.live_meta)::int as changed
     from bs_sites s left join bs_pages p on p.site_id = s.id group by s.id order by s.id`;
-  const siteChanges = sites.filter((s) => JSON.stringify(s.edits) !== JSON.stringify(s.live_edits)).length;
+  const siteChanges = sites.filter((s) => siteChanged(s)).length;
   const unpublished = sites.reduce((n, s) => n + s.changed, 0) + siteChanges;
   const [last] = await sql<{ user_name: string; created_at: string; title: string | null; slug: string }[]>`
     select b.user_name, b.created_at, p.title, s.slug from bs_publishes b join bs_sites s on s.id = b.site_id
@@ -58,7 +58,7 @@ export default async function BodyShopOverview() {
                 <div className="bs-row-sub">{s.city} · {s.domains[0]}</div>
               </div>
               <div className="row">
-                {s.changed || JSON.stringify(s.edits) !== JSON.stringify(s.live_edits)
+                {s.changed || siteChanged(s)
                   ? <span className="chip warn">Unpublished changes</span>
                   : <span className="chip ok">Up to date</span>}
                 <span className="chip">{s.pages} pages</span>

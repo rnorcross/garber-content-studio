@@ -8,17 +8,31 @@ import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import * as cheerio from 'cheerio';
 import { sql } from './db';
+import { detectInfo, cleanInfo, infoReplacements, infoChanged, type SiteInfo } from './bodyshop-info';
 
-export type Edit =
-  | { id: string; kind: 'text'; tag: string; from: string; to: string; scope: 'page' | 'site'; at?: string; by?: string }
-  | { id: string; kind: 'img'; from: string; to: string; scope: 'page' | 'site'; at?: string; by?: string }
-  | { id: string; kind: 'replace'; from: string; to: string; scope: 'page' | 'site'; at?: string; by?: string };
+type EditBase = { id: string; scope: 'page' | 'site'; at?: string; by?: string };
+/**
+ * One change layered over the approved page.
+ *   text / img / link / alt match an element by what it shows (tag + text, src, href).
+ *   `nth` narrows it to one occurrence on the page (0-based, in page order) when the same
+ *   text, image or link appears more than once; without it, every match changes.
+ *   replace is a raw find & replace over the whole page, head and search markup included.
+ */
+export type Edit = EditBase & (
+  | { kind: 'text'; tag: string; from: string; to: string; nth?: number }
+  | { kind: 'img'; from: string; to: string; nth?: number }
+  | { kind: 'link'; from: string; to: string; nth?: number; newTab?: boolean; text?: string }
+  | { kind: 'alt'; from: string; to: string; nth?: number }
+  | { kind: 'replace'; from: string; to: string }
+);
 
 export type Meta = { title?: string; description?: string };
 
 export type BsSite = {
   id: number; slug: string; name: string; city: string | null; domains: string[];
   edits: Edit[]; live_edits: Edit[]; published_at: string | null; created_at: string;
+  /** Site Info: draft, what's live, and the values the approved pages were built with. */
+  info: SiteInfo; live_info: SiteInfo; info_base: SiteInfo;
 };
 export type BsPage = {
   id: number; site_id: number; path: string; title: string; base_html: string;
@@ -78,6 +92,9 @@ create table if not exists bs_publishes (
   created_at  timestamptz not null default now()
 );
 create index if not exists bs_publishes_idx on bs_publishes(site_id, created_at desc);
+alter table bs_sites add column if not exists info      jsonb not null default '{}';
+alter table bs_sites add column if not exists live_info jsonb not null default '{}';
+alter table bs_sites add column if not exists info_base jsonb not null default '{}';
 `;
 
 let ready: Promise<void> | null = null;
@@ -129,33 +146,83 @@ const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
  * The browser half of the overlay. Kept as a string so the server sends the exact same rules
- * it applied itself. Matches a text edit by tag + visible text, so it survives the site's own
- * re-renders and differences in how HTML gets serialized.
+ * it applied itself (applyServer below). Each element an edit changes is marked with the
+ * edit's id in data-ws, so a page the server already edited isn't edited twice, and `nth`
+ * counts the same elements in the same order on both sides. When the site's own script
+ * re-draws a section, the marks go with the old elements and the edits apply again.
+ * __WSL is the link prefix used on the studio's /s/<slug>/ address.
  */
-const APPLY_JS = `(function(){var E=window.__WS||[];function n(s){return (s||'').replace(/\\s+/g,' ').trim()}
-window.__wsApply=function(root){root=root||document;for(var i=0;i<E.length;i++){var e=E[i];
-if(e.kind==='text'){var els=root.getElementsByTagName(e.tag);for(var j=0;j<els.length;j++){var el=els[j];if(el.__ws===e.id)continue;if(n(el.textContent)===e.from){el.innerHTML=e.to;el.__ws=e.id}}}
-else if(e.kind==='img'){var im=root.querySelectorAll('img');for(var k=0;k<im.length;k++){if(im[k].getAttribute('src')===e.from){im[k].setAttribute('src',e.to);im[k].removeAttribute('srcset')}}}}};
+const APPLY_JS = `(function(){var E=window.__WS||[],L=window.__WSL||'';function n(s){return (s||'').replace(/\\s+/g,' ').trim()}
+function mk(el){var v=el.getAttribute('data-ws');return v?v.split(' '):[]}
+window.__wsApply=function(root){root=root||document;
+for(var i=0;i<E.length;i++){var e=E[i];if(e.kind==='replace')continue;
+var els=root.querySelectorAll(e.kind==='text'?e.tag:e.kind==='link'?'a':'img'),c=0;
+for(var j=0;j<els.length;j++){var el=els[j],m=mk(el),done=m.indexOf(e.id)>=0;
+if(!done&&!(e.kind==='text'?n(el.textContent)===e.from:e.kind==='link'?el.getAttribute('href')===e.from:el.getAttribute('src')===e.from))continue;
+var x=c++;if(e.nth!=null&&x!==e.nth)continue;if(done)continue;
+if(e.kind==='text')el.innerHTML=e.to;else if(e.kind==='img'){el.setAttribute('src',e.to);el.removeAttribute('srcset')}
+else if(e.kind==='alt')el.setAttribute('alt',e.to);
+else{el.setAttribute('href',e.to);if(e.newTab===true){el.setAttribute('target','_blank');el.setAttribute('rel','noopener')}else if(e.newTab===false)el.removeAttribute('target')}
+m.push(e.id);el.setAttribute('data-ws',m.join(' '))}}
+if(L){var as=root.querySelectorAll('a[href^="/"]');for(var k=0;k<as.length;k++){var h=as[k].getAttribute('href');if(!/^\\/(\\/|s\\/|sites\\/)/.test(h))as[k].setAttribute('href',L+h)}}};
 if(document.readyState!=='loading')window.__wsApply(document.getElementById('app'));else document.addEventListener('DOMContentLoaded',function(){window.__wsApply(document.getElementById('app'))});})();`;
+
+/** The server half of the overlay: the same rules as APPLY_JS, on the parsed page. */
+function applyServer($: cheerio.CheerioAPI, app: cheerio.Cheerio<any>, edits: Edit[], misses?: Set<string>) {
+  for (const e of edits) {
+    if (e.kind === 'replace') continue;
+    let c = 0, hit = 0;
+    app.find(e.kind === 'text' ? e.tag : e.kind === 'link' ? 'a' : 'img').each((_, node) => {
+      const el = $(node);
+      const m = (el.attr('data-ws') || '').split(' ').filter(Boolean);
+      const done = m.includes(e.id);
+      const match = done || (e.kind === 'text' ? norm(el.text()) === e.from : e.kind === 'link' ? el.attr('href') === e.from : el.attr('src') === e.from);
+      if (!match) return;
+      const x = c++;
+      if (e.nth != null && x !== e.nth) return;
+      hit++;
+      if (done) return;
+      if (e.kind === 'text') el.html(e.to);
+      else if (e.kind === 'img') el.attr('src', e.to).removeAttr('srcset');
+      else if (e.kind === 'alt') el.attr('alt', e.to);
+      else {
+        el.attr('href', e.to);
+        if (e.newTab === true) el.attr('target', '_blank').attr('rel', 'noopener');
+        else if (e.newTab === false) el.removeAttr('target');
+      }
+      el.attr('data-ws', [...m, e.id].join(' '));
+    });
+    if (!hit) misses?.add(e.id);
+  }
+}
 
 /**
  * Builds the HTML for a page.
  *   live: what visitors get (published edits).
  *   draft: the current unpublished state, fully interactive.
  *   edit: the draft with the site's scripts removed and the click-to-edit layer added.
+ * opts.linkBase: prefix for the page's own links (the studio's /s/<slug> address).
+ * opts.misses: collects the ids of edits that no longer match anything on the page.
  */
 export function renderPage(
-  site: Pick<BsSite, 'slug' | 'edits' | 'live_edits'>, page: BsPage, mode: 'live' | 'draft' | 'edit',
-  opts: { linkBase?: string } = {},
+  site: Pick<BsSite, 'slug' | 'edits' | 'live_edits'> & Partial<Pick<BsSite, 'info' | 'live_info' | 'info_base'>>,
+  page: BsPage, mode: 'live' | 'draft' | 'edit',
+  opts: { linkBase?: string; misses?: Set<string> } = {},
 ) {
   const live = mode === 'live';
   const edits: Edit[] = [...(live ? site.live_edits : site.edits), ...(live ? page.live_edits : page.edits)];
   const meta: Meta = live ? page.live_meta : page.meta;
   let html = page.base_html;
 
-  // 1. Find & replace edits run over the raw HTML, so they also reach the page's head, schema
-  //    markup, phone links and the templates the site's script re-draws from.
-  for (const e of edits) if (e.kind === 'replace' && e.from) html = html.split(e.from).join(e.to);
+  // 1. Site Info changes (phone, hours, address...) become exact replacements in every format
+  //    the pages use. Then the site's own find & replace edits. Both run over the raw HTML, so
+  //    they also reach the head, search markup, phone links and the page script's templates.
+  const info = live ? site.live_info : site.info;
+  if (site.info_base && info) for (const [a, b] of infoReplacements(site.info_base, info, html)) html = html.split(a).join(b);
+  for (const e of edits) if (e.kind === 'replace' && e.from) {
+    if (!html.includes(e.from)) opts.misses?.add(e.id);
+    html = html.split(e.from).join(e.to);
+  }
 
   // 2. Asset paths: the files live under /sites/<slug>/ in this app.
   const base = `/sites/${site.slug}`;
@@ -163,13 +230,6 @@ export function renderPage(
     .replace(/(["'(\s,])\/(img|js|fonts|og|video)\//g, `$1${base}/$2/`)
     .replace(/(["'])\/favicon\.webp/g, `$1${base}/favicon.webp`)
     .replace(/runtime\.js\?v=[a-z0-9]+/, 'runtime.js?v=ws1');
-
-  // 2b. On the studio's address (/s/<slug>/...), the pages' own links ("/contact-us/") would land
-  //     on the studio's root. Point them inside the site. On the shop's own domain there's no base.
-  if (opts.linkBase) {
-    const lb = opts.linkBase;
-    html = html.replace(/(\bhref=["'])\/(?!\/|sites\/|s\/)/g, `$1${lb}/`);
-  }
 
   const $ = cheerio.load(html);
 
@@ -183,17 +243,22 @@ export function renderPage(
     $('meta[property="og:description"]').attr('content', meta.description);
   }
 
-  // 4. Text and image edits on the server-rendered page.
+  // 4. Text, image, link and alt-text edits on the server-rendered page.
   const app = $('#app');
-  for (const e of edits) {
-    if (e.kind === 'text') {
-      app.find(e.tag).each((_, el) => { if (norm($(el).text()) === e.from) $(el).html(e.to); });
-    } else if (e.kind === 'img') {
-      app.find('img').each((_, el) => { if ($(el).attr('src') === e.from) $(el).attr('src', e.to).removeAttr('srcset'); });
-    }
-  }
+  applyServer($, app, edits, opts.misses);
 
-  const overlay = edits.filter((e) => e.kind !== 'replace').map(({ id, kind, from, to, ...r }) => ({ id, kind, from, to, tag: (r as any).tag }));
+  // 5. On the studio's address, keep the page's own links inside /s/<slug>/. The browser does
+  //    the same after the site's script re-draws (APPLY_JS reads __WSL).
+  const lb = opts.linkBase || '';
+  if (lb) app.find('a[href^="/"]').each((_, el) => {
+    const h = $(el).attr('href')!;
+    if (!/^\/(\/|s\/|sites\/)/.test(h)) $(el).attr('href', lb + h);
+  });
+
+  const overlay = edits.filter((e) => e.kind !== 'replace').map((e) => {
+    const { at, by, scope, ...rest } = e as any;
+    return rest;
+  });
   if (mode === 'edit') {
     // No site scripts while editing: they'd re-draw sections out from under the cursor.
     $('script[src*="runtime.js"], script[src*="morphdom"], #dc-defs').remove();
@@ -202,10 +267,17 @@ export function renderPage(
     $('head').append(`<style>${EDIT_CSS}</style>`);
     $('body').append(`<script>${EDIT_JS}</script>`);
   } else {
-    $('head').append(`<script>window.__WSB=${JSON.stringify(base)};window.__WS=${JSON.stringify(overlay).replace(/</g, '\\u003c')};${APPLY_JS}</script>`);
+    $('head').append(`<script>window.__WSB=${JSON.stringify(base)};window.__WSL=${JSON.stringify(lb)};window.__WS=${JSON.stringify(overlay).replace(/</g, '\\u003c')};${APPLY_JS}</script>`);
     if (!live) $('head').append('<meta name="robots" content="noindex">');
   }
   return $.html();
+}
+
+/** Edits on a page (its own and the site's) that no longer match anything, by id. */
+export function brokenEdits(site: BsSite, page: BsPage) {
+  const misses = new Set<string>();
+  renderPage(site, page, 'draft', { misses });
+  return misses;
 }
 
 const EDIT_CSS = `
@@ -217,21 +289,31 @@ a{cursor:text}`;
 /** Click-to-edit inside the editor's preview frame. Reports each change to the editor. */
 const EDIT_JS = `(function(){
 var TEXT='h1,h2,h3,h4,h5,h6,p,li,a,span,strong,em,b,button,label,td,th,blockquote,figcaption,small,div';
+var APP=document.getElementById('app');
 function n(s){return (s||'').replace(/\\s+/g,' ').trim()}
-function editable(el){if(!el||el.nodeType!==1)return null;var app=document.getElementById('app');
- while(el&&el!==app&&el!==document.body){if(el.tagName==='IMG')return el;if(leaf(el))return el;el=el.parentNode}return null}
+function editable(el){if(!el||el.nodeType!==1)return null;
+ while(el&&el!==APP&&el!==document.body){if(el.tagName==='IMG')return el;if(leaf(el))return el;el=el.parentNode}return null}
 function leaf(el){if(!el.matches||!el.matches(TEXT)||!n(el.textContent))return false;
  if(el.tagName==='DIV')return el.children.length===0;
  return !el.querySelector('img,svg,video,iframe,input,select,textarea,div,p,ul,ol,h1,h2,h3,h4,h5,h6,section')}
+// Which copy this is, when the same text, image or link appears more than once on the page.
+function place(list,el){var i=Array.prototype.indexOf.call(list,el);return {nth:i<0?0:i,count:list.length}}
+function sameText(el,t){return Array.prototype.filter.call(APP.getElementsByTagName(el.tagName),function(x){return n(x.textContent)===t})}
+function sameAttr(sel,attr,v){return Array.prototype.filter.call(APP.querySelectorAll(sel),function(x){return x.getAttribute(attr)===v})}
 var hov=null;
 document.addEventListener('mouseover',function(e){var el=editable(e.target);if(hov&&hov!==el)hov.removeAttribute('data-ws-hover');if(el&&el.contentEditable!=='true'){el.setAttribute('data-ws-hover','');hov=el}});
 document.addEventListener('submit',function(e){e.preventDefault()},true);
-document.addEventListener('click',function(e){var el=editable(e.target);var a=e.target.closest&&e.target.closest('a');if(a||el)e.preventDefault();if(!el)return;e.stopPropagation();
- if(el.tagName==='IMG'){parent.postMessage({ws:'img',src:el.getAttribute('src'),alt:el.getAttribute('alt')||''},'*');return}
+document.addEventListener('click',function(e){var el=editable(e.target);var a=e.target.closest&&e.target.closest('a');
+ if(a||el)e.preventDefault();
+ if(a&&APP.contains(a)){var h=a.getAttribute('href')||'';var p=place(sameAttr('a','href',h),a);
+  parent.postMessage({ws:'link',href:h,nth:p.nth,count:p.count,newTab:a.getAttribute('target')==='_blank',text:n(a.textContent).slice(0,80)},'*')}
+ else parent.postMessage({ws:'nolink'},'*');
+ if(!el)return;e.stopPropagation();
+ if(el.tagName==='IMG'){var s=el.getAttribute('src');var q=place(sameAttr('img','src',s),el);parent.postMessage({ws:'img',src:s,alt:el.getAttribute('alt')||'',nth:q.nth,count:q.count},'*');return}
  if(el.contentEditable==='true')return;el.removeAttribute('data-ws-hover');
- var from=n(el.textContent);var before=el.innerHTML;el.contentEditable='true';el.focus();
+ var from=n(el.textContent);var pl=place(sameText(el,from),el);var before=el.innerHTML;el.contentEditable='true';el.focus();
  el.addEventListener('keydown',function k(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();el.blur()}if(ev.key==='Escape'){el.innerHTML=before;el.blur()}});
- el.addEventListener('blur',function b(){el.removeEventListener('blur',b);el.contentEditable='false';if(el.innerHTML!==before)parent.postMessage({ws:'text',tag:el.tagName.toLowerCase(),from:from,to:el.innerHTML.trim()},'*')});
+ el.addEventListener('blur',function b(){el.removeEventListener('blur',b);el.contentEditable='false';if(el.innerHTML!==before)parent.postMessage({ws:'text',tag:el.tagName.toLowerCase(),from:from,to:el.innerHTML.trim(),nth:pl.nth,count:pl.count},'*')});
 },true);
 window.addEventListener('message',function(e){if(e.data&&e.data.ws==='scroll')window.scrollTo(0,e.data.y)});
 var t;window.addEventListener('scroll',function(){clearTimeout(t);t=setTimeout(function(){parent.postMessage({ws:'scrolled',y:window.scrollY},'*')},150)});
@@ -242,7 +324,25 @@ var t;window.addEventListener('scroll',function(){clearTimeout(t);t=setTimeout(f
 export async function getSite(slug: string) {
   await ensureBodyShop();
   const [s] = await sql<BsSite[]>`select * from bs_sites where slug = ${slug}`;
+  if (s && !Object.keys(s.info_base || {}).length) return (await initInfo(s)) ?? s;
   return s ?? null;
+}
+
+/**
+ * The first time a site is opened, read its name, phone, address, hours and links from the
+ * home page's business markup. Those are the values the approved pages were built with.
+ */
+async function initInfo(s: BsSite) {
+  const [home] = await sql<{ base_html: string }[]>`select base_html from bs_pages where site_id = ${s.id} and path = '/'`;
+  if (!home) return null;
+  const b = cleanInfo(detectInfo(home.base_html));
+  if (!Object.keys(b).length) return null;
+  const [u] = await sql<BsSite[]>`
+    update bs_sites set info_base = ${sql.json(b as any)},
+      info = case when info = '{}'::jsonb then ${sql.json(b as any)} else info end,
+      live_info = case when live_info = '{}'::jsonb then ${sql.json(b as any)} else live_info end
+    where id = ${s.id} returning *`;
+  return u;
 }
 
 export async function getPageByPath(siteId: number, p: string) {
@@ -268,8 +368,12 @@ export async function getPage(id: number) {
 export function pageChanged(site: BsSite, page: BsPage) {
   return JSON.stringify(page.edits) !== JSON.stringify(page.live_edits)
     || JSON.stringify(page.meta) !== JSON.stringify(page.live_meta)
-    || JSON.stringify(site.edits) !== JSON.stringify(site.live_edits);
+    || siteChanged(site);
 }
+
+/** True when the site's own changes (site-wide edits, Site Info) aren't live yet. */
+export const siteChanged = (site: Pick<BsSite, 'edits' | 'live_edits' | 'info' | 'live_info'>) =>
+  JSON.stringify(site.edits) !== JSON.stringify(site.live_edits) || infoChanged(site.info, site.live_info);
 
 export const editId = () => Math.random().toString(36).slice(2, 10);
 export { esc, escRe };

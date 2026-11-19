@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import TopBar from '@/components/TopBar';
-import { getPage, pageChanged, type BsSite } from '@/lib/bodyshop';
+import { getPage, getSite, pageChanged, brokenEdits } from '@/lib/bodyshop';
 import PageEditor from './PageEditor';
 
 export const dynamic = 'force-dynamic';
@@ -12,8 +12,9 @@ export default async function EditPage({ params }: { params: Promise<{ slug: str
   const { slug, id } = await params;
   const page = await getPage(Number(id));
   if (!page) notFound();
-  const [site] = await sql<BsSite[]>`select * from bs_sites where id = ${page.site_id} and slug = ${slug}`;
-  if (!site) notFound();
+  const site = await getSite(slug);
+  if (!site || site.id !== page.site_id) notFound();
+  const broken = [...brokenEdits(site, page)];
   const history = await sql<{ id: number; user_name: string; created_at: string; note: string | null }[]>`
     select id, user_name, created_at, note from bs_publishes where page_id = ${page.id} order by created_at desc limit 20`;
   // Original search text, so the fields can show what's live when nothing's been changed.
@@ -30,6 +31,7 @@ export default async function EditPage({ params }: { params: Promise<{ slug: str
         page={{ id: page.id, path: page.path, title: page.title, meta: page.meta, edits: page.edits, liveEdits: page.live_edits, publishedAt: page.published_at, publishedBy: page.published_by }}
         orig={orig}
         changed={pageChanged(site, page)}
+        broken={broken}
         history={history}
       />
     </>

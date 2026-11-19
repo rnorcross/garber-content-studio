@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import TopBar from '@/components/TopBar';
-import { getSite, type BsPage } from '@/lib/bodyshop';
+import { getSite, siteChanged, type BsPage } from '@/lib/bodyshop';
 import SiteTools from './SiteTools';
 
 export const dynamic = 'force-dynamic';
@@ -24,8 +24,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
     select id, path, title, published_at, published_by,
       (edits <> live_edits or meta <> live_meta) as changed, jsonb_array_length(edits)::int as n
     from bs_pages where site_id = ${site.id} order by path`;
-  const siteChanged = JSON.stringify(site.edits) !== JSON.stringify(site.live_edits);
-  const waiting = pages.filter((p) => p.changed).length + (siteChanged ? 1 : 0);
+  const waiting = pages.filter((p) => p.changed).length + (siteChanged(site) ? 1 : 0);
 
   return (
     <>

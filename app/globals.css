@@ -283,3 +283,10 @@ body:has(.side) { padding-left: var(--side-w); }
   .bs-ed-frame { min-height: 70vh; }
   .bs-hero { font-size: 44px; }
 }
+
+/* Body shop editor: warnings, Site Info */
+.bs-warn { background: var(--warn-bg); color: var(--warn); border-radius: var(--radius); padding: 10px 12px; font-size: 13px; font-weight: 600; margin: 0; }
+.bs-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.bs-hours { display: grid; grid-template-columns: 110px 90px 1fr 1fr; gap: 8px 10px; align-items: center; font-size: 14px; }
+.bs-hours .day { font-weight: 650; }
+.bs-changed-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); margin-left: 6px; vertical-align: middle; }

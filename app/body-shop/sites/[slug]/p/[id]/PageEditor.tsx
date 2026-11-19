@@ -11,14 +11,16 @@ type Props = {
   page: { id: number; path: string; title: string; meta: Meta; edits: Edit[]; liveEdits: Edit[]; publishedAt: string | null; publishedBy: string | null };
   orig: { title: string; description: string };
   changed: boolean;
+  broken: string[];
   history: { id: number; user_name: string; created_at: string; note: string | null }[];
 };
 
 const decode = (s: string) => s.replace(/&amp;/g, '&').replace(/&#39;|&#x27;/g, "'").replace(/&quot;/g, '"');
 const fmt = (d: string) => new Date(d).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+const KIND: Record<Edit['kind'], string> = { text: 'Text', img: 'Image', link: 'Link', alt: 'Alt text', replace: 'Replace' };
 const plain = (h: string) => h.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
-export default function PageEditor({ site, page, orig, changed, history }: Props) {
+export default function PageEditor({ site, page, orig, changed, broken, history }: Props) {
   const router = useRouter();
   const frame = useRef<HTMLIFrameElement>(null);
   const scrollY = useRef(0);
@@ -28,7 +30,14 @@ export default function PageEditor({ site, page, orig, changed, history }: Props
   const [v, setV] = useState(0);
   const [busy, setBusy] = useState('');
   const [err, setErr] = useState('');
-  const [img, setImg] = useState<{ src: string; alt: string } | null>(null);
+  const [img, setImg] = useState<{ src: string; alt: string; nth: number; count: number } | null>(null);
+  const [alt, setAlt] = useState('');
+  const [link, setLink] = useState<{ href: string; nth: number; count: number; newTab: boolean; text: string } | null>(null);
+  const [href, setHref] = useState('');
+  const [newTab, setNewTab] = useState(false);
+  // When the same text, image or link appears more than once on the page: change only the
+  // one that was clicked, or every copy. Site-wide edits always change every copy.
+  const [copies, setCopies] = useState<'one' | 'all'>('one');
   const [picker, setPicker] = useState(false);
   const [title, setTitle] = useState(decode(page.meta.title ?? orig.title));
   const [desc, setDesc] = useState(decode(page.meta.description ?? orig.description));
@@ -49,17 +58,23 @@ export default function PageEditor({ site, page, orig, changed, history }: Props
       if (e.source !== frame.current?.contentWindow || !e.data?.ws) return;
       const d = e.data;
       if (d.ws === 'scrolled') scrollY.current = d.y;
-      else if (d.ws === 'text') act('save', { action: 'edit', kind: 'text', tag: d.tag, from: d.from, to: d.to, scope });
-      else if (d.ws === 'img') { setImg({ src: d.src, alt: d.alt }); setTab('changes'); }
+      else if (d.ws === 'text') act('save', { action: 'edit', kind: 'text', tag: d.tag, from: d.from, to: d.to, scope, ...one(d) });
+      else if (d.ws === 'img') { setImg({ src: d.src, alt: d.alt, nth: d.nth, count: d.count }); setAlt(d.alt); setTab('changes'); }
+      else if (d.ws === 'link') { setLink(d); setHref(d.href); setNewTab(!!d.newTab); setTab('changes'); }
+      else if (d.ws === 'nolink') setLink(null);
     };
     window.addEventListener('message', on);
     return () => window.removeEventListener('message', on);
   });
 
+  /** The copy to change, when the clicked thing appears more than once and "only this one" is on. */
+  const one = (d: { nth?: number; count?: number }) => (copies === 'one' && scope === 'page' && (d.count ?? 1) > 1 ? { nth: d.nth } : {});
+
   // Keep the reader's place when the frame reloads after a save.
   const onLoad = () => frame.current?.contentWindow?.postMessage({ ws: 'scroll', y: scrollY.current }, '*');
 
   const pageLive = new Set(page.liveEdits.map((e) => e.id));
+  const brokenSet = new Set(broken);
   const siteLive = new Set(site.liveEdits.map((e) => e.id));
   const metaDirty = title !== decode(page.meta.title ?? orig.title) || desc !== decode(page.meta.description ?? orig.description);
 
@@ -68,7 +83,8 @@ export default function PageEditor({ site, page, orig, changed, history }: Props
       <div className="row" style={{ justifyContent: 'space-between', flexWrap: 'nowrap' }}>
         <span className="row" style={{ gap: 6 }}>
           <span className={'chip' + (live ? ' ok' : ' warn')}>{live ? 'Live' : 'Draft'}</span>
-          <span className="chip">{e.kind === 'img' ? 'Image' : e.kind === 'replace' ? 'Replace' : `Text · ${(e as any).tag}`}</span>
+          <span className="chip">{KIND[e.kind]}{e.kind === 'text' ? ` · ${e.tag}` : ''}{'nth' in e && e.nth != null ? ` · copy ${e.nth + 1}` : ''}</span>
+          {brokenSet.has(e.id) && <span className="chip bad" title="The text, image or link this edit changes isn’t on the page anymore, so it does nothing. Undo it, or redo the change.">Not found</span>}
         </span>
         <button className="btn sm ghost danger" disabled={!!busy}
           onClick={() => s === 'site'
@@ -77,6 +93,16 @@ export default function PageEditor({ site, page, orig, changed, history }: Props
       </div>
       {e.kind === 'img' ? (
         <div className="bs-change-imgs"><img src={e.from} alt="" /><span>→</span><img src={e.to} alt="" /></div>
+      ) : e.kind === 'alt' ? (
+        <>
+          <div className="bs-change-imgs"><img src={e.from} alt="" style={{ width: 70 }} /></div>
+          <div className="bs-change-to">Alt text: {e.to || <em>(empty, decorative)</em>}</div>
+        </>
+      ) : e.kind === 'link' ? (
+        <>
+          <div className="bs-change-from">{e.from}</div>
+          <div className="bs-change-to">{e.to}{e.newTab ? ' · opens in a new tab' : ''}</div>
+        </>
       ) : (
         <>
           <div className="bs-change-from">{e.from}</div>
@@ -115,7 +141,7 @@ export default function PageEditor({ site, page, orig, changed, history }: Props
 
       <div className="bs-ed-body">
         <div className="bs-ed-stage">
-          {mode === 'edit' && <div className="bs-ed-tip">Click any text to change it, or any image to swap it. Press Enter to save, Esc to cancel.</div>}
+          {mode === 'edit' && <div className="bs-ed-tip">Click text to change it, an image to swap it or edit its alt text, or a link or button to change where it goes. Enter saves, Esc cancels.</div>}
           <iframe
             ref={frame}
             key={`${mode}-${v}`}
@@ -145,6 +171,40 @@ export default function PageEditor({ site, page, orig, changed, history }: Props
                 </div>
                 <span className="hint">“Every page” is for things that repeat, like the header, footer or a button label.</span>
               </div>
+              {scope === 'page' && (
+                <div className="field">
+                  <label>When it appears more than once on this page</label>
+                  <div className="seg full">
+                    <button className={copies === 'one' ? 'on' : ''} onClick={() => setCopies('one')}>Only the one I click</button>
+                    <button className={copies === 'all' ? 'on' : ''} onClick={() => setCopies('all')}>Every copy</button>
+                  </div>
+                </div>
+              )}
+
+              {broken.length > 0 && (
+                <p className="bs-warn">{broken.length} {broken.length === 1 ? 'edit no longer matches' : 'edits no longer match'} anything on this page, so {broken.length === 1 ? 'it does' : 'they do'} nothing. They’re marked “Not found” below.</p>
+              )}
+
+              {link && (
+                <div className="bs-change">
+                  <div className="bs-card-title" style={{ marginTop: 0, fontSize: 15 }}>Link</div>
+                  {link.text && <div className="bs-change-by">“{link.text}”</div>}
+                  <input className="input" value={href} onChange={(e) => setHref(e.target.value)} placeholder="/contact-us/ or https://…" />
+                  <label className="row" style={{ gap: 8, fontSize: 13.5 }}>
+                    <input type="checkbox" checked={newTab} onChange={(e) => setNewTab(e.target.checked)} /> Open in a new tab
+                  </label>
+                  {link.count > 1 && scope === 'page' && (
+                    <span className="hint">{link.count} links on this page go to {link.href || 'this address'}. {copies === 'one' ? 'Only the one you clicked changes.' : 'All of them change.'}</span>
+                  )}
+                  <div className="row">
+                    <button className="btn sm dark" disabled={!!busy || (href === link.href && newTab === link.newTab)}
+                      onClick={async () => { if (await act('save', { action: 'edit', kind: 'link', from: link.href, to: href, newTab, scope, ...one(link) })) setLink(null); }}>
+                      Save link
+                    </button>
+                    <button className="btn sm ghost" onClick={() => setLink(null)}>Close</button>
+                  </div>
+                </div>
+              )}
 
               {img && (
                 <div className="bs-change">
@@ -152,8 +212,17 @@ export default function PageEditor({ site, page, orig, changed, history }: Props
                   <img src={img.src} alt={img.alt} className="bs-img-current" />
                   <div className="row">
                     <button className="btn sm dark" onClick={() => setPicker(true)}>Choose or upload…</button>
-                    <button className="btn sm ghost" onClick={() => setImg(null)}>Cancel</button>
+                    <button className="btn sm ghost" onClick={() => setImg(null)}>Close</button>
                   </div>
+                  <div className="field" style={{ marginTop: 6 }}>
+                    <label>Alt text <span style={{ float: 'right' }}>{alt.length}/125</span></label>
+                    <textarea className="textarea" rows={2} value={alt} onChange={(e) => setAlt(e.target.value)} placeholder="What the image shows, for screen readers and Google" />
+                    <span className="hint">Leave empty only for decorative images.{img.count > 1 ? ` This image appears ${img.count} times on the page; the alt text changes on all of them.` : ''}</span>
+                  </div>
+                  <button className="btn sm" disabled={!!busy || alt === img.alt}
+                    onClick={async () => { if (await act('save', { action: 'edit', kind: 'alt', from: img.src, to: alt, scope })) setImg({ ...img, alt }); }}>
+                    Save alt text
+                  </button>
                 </div>
               )}
 
@@ -212,7 +281,7 @@ export default function PageEditor({ site, page, orig, changed, history }: Props
           onClose={() => setPicker(false)}
           onPick={async (url) => {
             setPicker(false);
-            if (await act('save', { action: 'edit', kind: 'img', from: img.src, to: url, scope })) setImg(null);
+            if (await act('save', { action: 'edit', kind: 'img', from: img.src, to: url, scope, ...one(img) })) setImg(null);
           }}
         />
       )}
