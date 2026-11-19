@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-randall-overall",
+  "versionNote": "Garber Randall pages with 6 customer testimonial videos (Nov 19, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Randall About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberrandall.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Randall Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberrandall.com/garber-randall-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Randall History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberrandall.com/garber-randall-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Randall Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberrandall.com/garber-randall-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Randall Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberrandall.com/garber-randall-mission-vision-values.htm"
+    }
+  ]
+}

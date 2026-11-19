@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-randall-buick-gmc",
+  "versionNote": "Garber Randall Buick GMC pages with 6 customer testimonial videos (Nov 19, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Randall Buick GMC About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberrandallbuickgmc.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Randall Buick GMC Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberrandallbuickgmc.com/garber-randall-buick-gmc-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Randall Buick GMC History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberrandallbuickgmc.com/garber-randall-buick-gmc-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Randall Buick GMC Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberrandallbuickgmc.com/garber-randall-buick-gmc-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Randall Buick GMC Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberrandallbuickgmc.com/garber-randall-buick-gmc-mission-vision-values.htm"
+    }
+  ]
+}

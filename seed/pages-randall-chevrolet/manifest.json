@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-randall-chevrolet",
+  "versionNote": "Garber Randall Chevrolet pages with 6 customer testimonial videos (Nov 19, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Randall Chevrolet About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberrandallchevrolet.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Randall Chevrolet Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberrandallchevrolet.com/garber-randall-chevrolet-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Randall Chevrolet History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberrandallchevrolet.com/garber-randall-chevrolet-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Randall Chevrolet Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberrandallchevrolet.com/garber-randall-chevrolet-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Randall Chevrolet Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberrandallchevrolet.com/garber-randall-chevrolet-mission-vision-values.htm"
+    }
+  ]
+}

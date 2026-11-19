@@ -334,8 +334,8 @@
    "website": "https://www.garberrandallchevrolet.com",
    "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-randall-chevrolet-white.png",
    "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-randall-chevrolet-color.png",
-   "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/randall-chevrolet.jpg",
-   "imageVertical": null
+   "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-randall-chevrolet-horizontal.jpg",
+   "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-randall-chevrolet-vertical.jpg"
   },
   {
    "slug": "garber-randall-buick-gmc",
@@ -348,8 +348,8 @@
    "website": "https://www.garberrandallbuickgmc.com",
    "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-randall-buick-gmc-white.png",
    "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-randall-buick-gmc-color.png",
-   "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/randall-buick-gmc-cadillac.jpg",
-   "imageVertical": null
+   "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-randall-buick-gmc-horizontal.jpg",
+   "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-randall-buick-gmc-vertical.jpg"
   },
   {
    "slug": "garber-randall-cadillac",
@@ -361,15 +361,15 @@
    "website": "https://www.garberrandallcadillac.com",
    "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-randall-cadillac-white.png",
    "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-randall-cadillac-color.png",
-   "imageHorizontal": "https://assets.garberauto.com/assets/model-overview-backgrounds/randall-buick-gmc-cadillac.jpg",
-   "imageVertical": null
+   "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-randall-buick-gmc-horizontal.jpg",
+   "imageVertical": "https://assets.garberauto.com/assets/dealership-images/vertical/garber-randall-buick-gmc-vertical.jpg"
   },
   {
    "slug": "garber-randall-overall",
    "name": "Garber Randall (Overall)",
    "makes": [],
    "city": "Canandaigua, NY",
-   "website": null,
+   "website": "https://www.garberrandall.com",
    "logoWhite": "https://assets.garberauto.com/assets/dealership-logos/white/garber-randall-white.png",
    "logo": "https://assets.garberauto.com/assets/dealership-logos/regular/garber-randall-color.png",
    "imageHorizontal": "https://assets.garberauto.com/assets/dealership-images/horizontal/garber-randall-horizontal.jpg",

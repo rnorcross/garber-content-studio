@@ -1,0 +1,36 @@
+{
+  "dealership": "garber-randall-cadillac",
+  "versionNote": "Garber Randall Cadillac pages with 6 customer testimonial videos (Nov 19, 2026)",
+  "pages": [
+    {
+      "file": "about.html",
+      "title": "Garber Randall Cadillac About Us",
+      "pageType": "about",
+      "liveUrl": "https://www.garberrandallcadillac.com/dealership/about.htm"
+    },
+    {
+      "file": "reviews.html",
+      "title": "Garber Randall Cadillac Dealership Reviews",
+      "pageType": "reviews",
+      "liveUrl": "https://www.garberrandallcadillac.com/garber-randall-cadillac-dealership-reviews.htm"
+    },
+    {
+      "file": "history.html",
+      "title": "Garber Randall Cadillac History of Our Dealership",
+      "pageType": "history",
+      "liveUrl": "https://www.garberrandallcadillac.com/garber-randall-cadillac-history-of-our-dealership.htm"
+    },
+    {
+      "file": "community.html",
+      "title": "Garber Randall Cadillac Commitment to Community",
+      "pageType": "community",
+      "liveUrl": "https://www.garberrandallcadillac.com/garber-randall-cadillac-commitment-to-community.htm"
+    },
+    {
+      "file": "mission.html",
+      "title": "Garber Randall Cadillac Mission Vision Values",
+      "pageType": "mission",
+      "liveUrl": "https://www.garberrandallcadillac.com/garber-randall-cadillac-mission-vision-values.htm"
+    }
+  ]
+}
