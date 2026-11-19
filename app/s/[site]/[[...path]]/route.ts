@@ -1,5 +1,6 @@
 import { unstable_cache } from 'next/cache';
 import { getSite, getPageByPath, renderPage } from '@/lib/bodyshop';
+import { siteForHost } from '@/lib/site-hosts';
 
 // Public body shop pages. A site's own domain is routed here by middleware.ts
 // (garbercollisionsaginaw.com/about/ → /s/saginaw/about/); /s/<slug>/... also works
@@ -30,9 +31,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ site: st
   const p = '/' + path.map(decodeURIComponent).join('/') + (path.length ? '/' : '');
   const out = await render(site, p);
   if (!out) return new Response('Not found', { status: 404 });
+  const u = new URL(req.url);
+  // Judged by the Host header: after middleware's rewrite the path may already read /s/<slug>/.
+  const onOwnDomain = siteForHost(req.headers.get('host')) === site;
   if (out.redirect) {
-    const u = new URL(req.url);
-    const onOwnDomain = !u.pathname.startsWith(`/s/${site}`);
     return Response.redirect(new URL((onOwnDomain ? '' : `/s/${site}`) + out.redirect, u), 308);
   }
   if (out.status === 404) {
@@ -44,6 +46,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ site: st
       // Browsers re-check every time; Vercel's CDN keeps a copy briefly and our cache tag
       // makes a publish show up within seconds.
       'cache-control': 'public, max-age=0, s-maxage=10, stale-while-revalidate=60',
+      // The /s/<slug>/ copy on the studio's address is for checking only; keep it out of search
+      // so it never competes with the shop's own domain.
+      ...(onOwnDomain ? {} : { 'x-robots-tag': 'noindex' }),
     },
   });
 }
