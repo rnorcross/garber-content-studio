@@ -102,10 +102,10 @@ export default function SiteTools({ slug, edits, liveEdits, domains, waiting, re
           {edits.map((e) => (
             <div key={e.id} className="bs-edit">
               <span className={'chip' + (live.has(e.id) ? ' ok' : ' warn')}>{live.has(e.id) ? 'Live' : 'Draft'}</span>
-              <span className="bs-edit-kind">{({ replace: 'Replace', img: 'Image', text: 'Text', link: 'Link', alt: 'Alt text', hide: 'Hidden', dup: 'Added item' } as const)[e.kind]}</span>
-              <span className="bs-edit-from">{e.kind === 'img' || e.kind === 'alt' ? e.from.split('/').pop() : e.kind === 'hide' ? (e.label || e.from).slice(0, 60) : e.from.slice(0, 80)}</span>
-              {e.kind !== 'hide' && <span>→</span>}
-              {e.kind !== 'hide' && <span className="bs-edit-to">{e.kind === 'img' ? e.to.split('/').pop() : e.to.replace(/<[^>]+>/g, '')}</span>}
+              <span className="bs-edit-kind">{({ replace: 'Replace', img: 'Image', text: 'Text', link: 'Link', alt: 'Alt text', hide: 'Hidden', dup: 'Added item', style: 'Style', move: 'Moved' } as const)[e.kind]}</span>
+              <span className="bs-edit-from">{e.kind === 'img' || e.kind === 'alt' ? e.from.split('/').pop() : e.kind === 'hide' || e.kind === 'style' || e.kind === 'move' ? (e.label || e.from).slice(0, 60) : e.from.slice(0, 80)}</span>
+              {'to' in e && <span>→</span>}
+              {'to' in e && <span className="bs-edit-to">{e.kind === 'img' ? e.to.split('/').pop() : e.to.replace(/<[^>]+>/g, '')}</span>}
               {check?.siteBroken.includes(e.id) && <span className="chip bad">Not found</span>}
               <button className="btn sm ghost danger" disabled={!!busy} onClick={() => run('rm', { action: 'remove', id: e.id })}>Remove</button>
             </div>

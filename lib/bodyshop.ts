@@ -29,7 +29,36 @@ export type Edit = EditBase & (
   | { kind: 'hide'; tag: string; from: string; nth?: number; label?: string }
   // Add a copy of a list item or card right after it, with `leaf` (a text inside it) changed to `to`.
   | { kind: 'dup'; tag: string; from: string; nth?: number; leaf: string; to: string }
+  // Styles for one element (`from` is its text, or its src for an image), per device.
+  | { kind: 'style'; tag: string; from: string; nth?: number; css: StyleSet; label?: string }
+  // Move an element to just after `after` (another element, same matching), or first in its parent.
+  | { kind: 'move'; tag: string; from: string; nth?: number; after: Target | null; label?: string }
 );
+
+/** An element, the way edits find it: tag plus its text (or src for images), and which copy. */
+export type Target = { tag: string; from: string; nth?: number };
+/** CSS per device: `all` applies everywhere, `tablet` at 1024px and below, `phone` at 767px and below. */
+export type StyleSet = Partial<Record<'all' | 'tablet' | 'phone', Record<string, string>>>;
+export const STYLE_PROPS = [
+  'font-size', 'font-weight', 'line-height', 'letter-spacing', 'text-transform', 'text-align', 'color',
+  'background-color', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+  'margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'border-radius', 'max-width', 'display',
+] as const;
+
+/** The stylesheet for style edits: one class per edit, !important so it beats the design's inline styles. */
+export function styleCss(edits: Edit[]) {
+  const rule = (id: string, css?: Record<string, string>) => {
+    const body = Object.entries(css ?? {}).filter(([k, v]) => (STYLE_PROPS as readonly string[]).includes(k) && /^[#a-z0-9 .,%()+-]{1,60}$/i.test(v))
+      .map(([k, v]) => `${k}:${v}!important`).join(';');
+    // #app + the class outranks the design's own rules, including its phone/tablet !important ones.
+    return body ? `#app .ws-s-${id}{${body}}` : '';
+  };
+  const st = edits.filter((e): e is Extract<Edit, { kind: 'style' }> => e.kind === 'style');
+  const all = st.map((e) => rule(e.id, e.css.all)).join('');
+  const tab = st.map((e) => rule(e.id, e.css.tablet)).join('');
+  const pho = st.map((e) => rule(e.id, e.css.phone)).join('');
+  return all + (tab ? `@media(max-width:1024px){${tab}}` : '') + (pho ? `@media(max-width:767px){${pho}}` : '');
+}
 
 /** Search & social settings for a page. */
 export type Meta = { title?: string; description?: string; ogImage?: string; noindex?: boolean };
@@ -216,16 +245,23 @@ const APPLY_JS = `(function(){var E=window.__WS||[],L=window.__WSL||'';function 
 function mk(el){var v=el.getAttribute('data-ws');return v?v.split(' '):[]}
 var B=window.__WSB||'',S=window.__WSS||'';function cs(u){u=u||'';if(B&&u.indexOf(B+'/')===0)return u.slice(B.length);if(S&&u.indexOf(S+'/')===0)return u.slice(S.length);return u}
 function leaf(r,t){var all=[r].concat(Array.prototype.slice.call(r.querySelectorAll('*'))),hit=null;for(var i=0;i<all.length;i++)if(n(all[i].textContent)===t)hit=all[i];return hit}
+function src(e){return e.kind==='img'||e.kind==='alt'||e.tag==='img'}
+function sel(e){return e.kind==='link'?'a':src(e)?'img':e.tag}
+function same(e,el){return e.kind==='link'?el.getAttribute('href')===e.from:src(e)?cs(el.getAttribute('src'))===cs(e.from):n(el.textContent)===e.from}
+function one(root,t){var els=root.querySelectorAll(t.tag==='img'?'img':t.tag),c=0;for(var j=0;j<els.length;j++){var el=els[j];if(el.hasAttribute('data-ws-clone')||!same(t,el))continue;var x=c++;if(t.nth==null||x===t.nth)return el}return null}
 window.__wsApply=function(root){root=root||document;
 for(var i=0;i<E.length;i++){var e=E[i];if(e.kind==='replace')continue;
-var els=root.querySelectorAll(e.kind==='text'||e.kind==='hide'||e.kind==='dup'?e.tag:e.kind==='link'?'a':'img'),c=0;
+var els=root.querySelectorAll(sel(e)),c=0;
 for(var j=0;j<els.length;j++){var el=els[j],m=mk(el),done=m.indexOf(e.id)>=0;
-if(el.hasAttribute('data-ws-clone'))continue;if(!done&&!(e.kind==='text'||e.kind==='hide'||e.kind==='dup'?n(el.textContent)===e.from:e.kind==='link'?el.getAttribute('href')===e.from:cs(el.getAttribute('src'))===cs(e.from)))continue;
+if(el.hasAttribute('data-ws-clone'))continue;if(!done&&!same(e,el))continue;
 var x=c++;if(e.nth!=null&&x!==e.nth)continue;if(done)continue;
-if(e.kind==='text')el.innerHTML=e.to;else if(e.kind==='hide')el.setAttribute('data-ws-hidden','');else if(e.kind==='dup'){var cl=el.cloneNode(true);cl.removeAttribute('data-ws');cl.setAttribute('data-ws-clone',e.id);var lf=leaf(cl,e.leaf);if(lf)lf.textContent=e.to;el.parentNode.insertBefore(cl,el.nextSibling)}else if(e.kind==='img'){el.setAttribute('src',e.to);el.removeAttribute('srcset')}
+if(e.kind==='text')el.innerHTML=e.to;else if(e.kind==='hide')el.setAttribute('data-ws-hidden','');
+else if(e.kind==='style')el.classList.add('ws-s-'+e.id);
+else if(e.kind==='move'){if(e.after){var an=one(root,e.after);if(!an||an===el)break;an.parentNode.insertBefore(el,an.nextSibling)}else el.parentNode.insertBefore(el,el.parentNode.firstElementChild)}
+else if(e.kind==='dup'){var cl=el.cloneNode(true);cl.removeAttribute('data-ws');cl.setAttribute('data-ws-clone',e.id);var lf=leaf(cl,e.leaf);if(lf)lf.textContent=e.to;el.parentNode.insertBefore(cl,el.nextSibling)}else if(e.kind==='img'){el.setAttribute('src',e.to);el.removeAttribute('srcset')}
 else if(e.kind==='alt')el.setAttribute('alt',e.to);
 else{el.setAttribute('href',e.to);if(e.newTab===true){el.setAttribute('target','_blank');el.setAttribute('rel','noopener')}else if(e.newTab===false)el.removeAttribute('target')}
-m.push(e.id);el.setAttribute('data-ws',m.join(' '))}}
+m.push(e.id);el.setAttribute('data-ws',m.join(' '));if(e.kind==='move')break}}
 if(L){var as=root.querySelectorAll('a[href^="/"]');for(var k=0;k<as.length;k++){var h=as[k].getAttribute('href');if(!/^\\/(\\/|s\\/|sites\\/|preview\\/)/.test(h))as[k].setAttribute('href',L+h)}}};
 if(document.readyState!=='loading')window.__wsApply(document.getElementById('app'));else document.addEventListener('DOMContentLoaded',function(){window.__wsApply(document.getElementById('app'))});})();`;
 
@@ -242,23 +278,47 @@ export function canonSrc(u: string | undefined, base: string, assetBase?: string
 }
 
 function applyServer($: cheerio.CheerioAPI, app: cheerio.Cheerio<any>, edits: Edit[], misses?: Set<string>, canon: (u?: string) => string = (u) => u ?? '') {
+  const bySrc = (e: { kind?: string; tag?: string }) => e.kind === 'img' || e.kind === 'alt' || e.tag === 'img';
+  const selector = (e: any) => (e.kind === 'link' ? 'a' : bySrc(e) ? 'img' : e.tag);
+  const same = (e: any, el: cheerio.Cheerio<any>) => (e.kind === 'link' ? el.attr('href') === e.from
+    : bySrc(e) ? canon(el.attr('src')) === canon(e.from) : norm(el.text()) === e.from);
+  /** The element a Target points at (for `move`), by the same rules. */
+  const one = (t: Target) => {
+    let c = 0, hit: cheerio.Cheerio<any> | null = null;
+    app.find(t.tag === 'img' ? 'img' : t.tag).each((_, node) => {
+      if (hit) return;
+      const el = $(node);
+      if (el.attr('data-ws-clone') !== undefined || !same(t, el)) return;
+      const x = c++;
+      if (t.nth == null || x === t.nth) hit = el;
+    });
+    return hit as cheerio.Cheerio<any> | null;
+  };
   for (const e of edits) {
     if (e.kind === 'replace') continue;
-    let c = 0, hit = 0;
-    const byText = e.kind === 'text' || e.kind === 'hide' || e.kind === 'dup';
-    app.find(byText ? (e as any).tag : e.kind === 'link' ? 'a' : 'img').each((_, node) => {
+    let c = 0, hit = 0, stop = false;
+    app.find(selector(e)).each((_, node) => {
+      if (stop) return;
       const el = $(node);
       if (el.attr('data-ws-clone') !== undefined) return;
       const m = (el.attr('data-ws') || '').split(' ').filter(Boolean);
       const done = m.includes(e.id);
-      const match = done || (byText ? norm(el.text()) === e.from : e.kind === 'link' ? el.attr('href') === e.from : canon(el.attr('src')) === canon(e.from));
-      if (!match) return;
+      if (!done && !same(e, el)) return;
       const x = c++;
       if (e.nth != null && x !== e.nth) return;
-      hit++;
-      if (done) return;
+      if (done) { hit++; return; }
       if (e.kind === 'text') el.html(e.to);
       else if (e.kind === 'hide') el.attr('data-ws-hidden', '');
+      else if (e.kind === 'style') el.addClass(`ws-s-${e.id}`);
+      else if (e.kind === 'move') {
+        // One element per move; the anchor has to exist (and not be the element itself).
+        stop = true;
+        if (e.after) {
+          const an = one(e.after);
+          if (!an || an.get(0) === node) return;
+          an.after(el);
+        } else el.parent().prepend(el);
+      }
       else if (e.kind === 'dup') {
         const cl = el.clone().removeAttr('data-ws').attr('data-ws-clone', e.id);
         // The deepest element inside the copy that shows `leaf` gets the new text.
@@ -273,6 +333,7 @@ function applyServer($: cheerio.CheerioAPI, app: cheerio.Cheerio<any>, edits: Ed
         if (e.newTab === true) el.attr('target', '_blank').attr('rel', 'noopener');
         else if (e.newTab === false) el.removeAttr('target');
       }
+      hit++;
       el.attr('data-ws', [...m, e.id].join(' '));
     });
     if (!hit) misses?.add(e.id);
@@ -339,8 +400,11 @@ export function renderPage(
   const ann = live ? site.live_announce : site.announce;
   if (ann?.text) $('body').prepend(announceHtml(ann, opts.linkBase));
 
-  // 4. Text, image, link and alt-text edits on the server-rendered page.
+  // 4. Text, image, link and alt-text edits on the server-rendered page. Style edits are
+  //    classes, with their rules in one stylesheet in the head.
   const app = $('#app');
+  const css = styleCss(edits);
+  if (css) $('head').append(`<style id="ws-styles">${css}</style>`);
   applyServer($, app, edits, opts.misses, (u) => canonSrc(u, base, site.asset_base));
 
   // 5. On the studio's address, keep the page's own links inside /s/<slug>/. The browser does
@@ -361,7 +425,7 @@ export function renderPage(
     $('script').filter((_, el) => /googletagmanager|EmbedSocial|video\[data-src\]/.test($(el).html() || '')).remove();
     $('noscript').remove();
     $('head').append(`<style>${EDIT_CSS}</style>`);
-    $('body').append(`<script>${EDIT_JS}</script>`);
+    $('body').append(`<script>${EDIT_JS}</script><script>${SELECT_JS}</script>`);
   } else {
     $('head').append('<style>[data-ws-hidden]{display:none!important}</style>');
     $('head').append(`<script>window.__WSB=${JSON.stringify(media)};window.__WSS=${JSON.stringify(base)};window.__WSL=${JSON.stringify(lb)};window.__WS=${JSON.stringify(overlay).replace(/</g, '\\u003c')};${APPLY_JS}</script>`);
@@ -391,12 +455,59 @@ const EDIT_CSS = `
 [data-ws-hidden]{opacity:.32;outline:2px dashed #c2341d !important;outline-offset:-2px}
 [data-ws-clone]{outline:2px dashed #0a8754 !important;outline-offset:2px}
 [data-ws-pick]{outline:3px solid #b8922f !important;outline-offset:2px}
+[data-ws-sel]{outline:2px solid #d63ea8 !important;outline-offset:1px}
+[data-ws-drop]{box-shadow:0 -4px 0 #d63ea8 inset !important}
 [data-ws-hover]{outline:2px dashed #1122d7 !important;outline-offset:2px;cursor:text}
 img[data-ws-hover]{cursor:pointer}
 [contenteditable="true"]{outline:2px solid #1122d7 !important;outline-offset:2px;background:rgba(17,34,215,.04)}
 a{cursor:text}`;
 
 /** Click-to-edit inside the editor's preview frame. Reports each change to the editor. */
+/**
+ * Selecting elements in the editor's preview (like a page builder): the Structure tree, the
+ * selected element's current styles and parents, and live style previews before saving.
+ * Elements are addressed by their position under #app ("0.3.1") between the editor and the frame;
+ * edits themselves use the usual tag + text (or src) + nth.
+ */
+const SELECT_JS = `(function(){
+var APP=document.getElementById('app');var ROOT=APP.firstElementChild||APP;
+function n(s){return (s||'').replace(/\\s+/g,' ').trim()}
+var SKIP=/^(SCRIPT|STYLE|BR|NOSCRIPT|TEMPLATE|svg|SVG|PATH|path)$/;
+var LEAF=/^(P|H1|H2|H3|H4|H5|H6|A|BUTTON|IMG|SPAN|LI|LABEL|STRONG|EM|SMALL|VIDEO|INPUT|SELECT|TEXTAREA)$/;
+function pathOf(el){var p=[];while(el&&el!==APP){var par=el.parentNode;p.unshift(Array.prototype.indexOf.call(par.children,el));el=par}return p.join('.')}
+function byPath(s){var el=APP;if(s!=='')s.split('.').forEach(function(i){el=el&&el.children[+i]});return el}
+function key(el){if(el.tagName==='IMG'){var sr=el.getAttribute('src');var l=Array.prototype.filter.call(APP.querySelectorAll('img'),function(x){return x.getAttribute('src')===sr});return {tag:'img',from:sr,nth:l.indexOf(el),count:l.length}}
+ var t=n(el.textContent);if(!t)return null;var l2=Array.prototype.filter.call(APP.getElementsByTagName(el.tagName),function(x){return n(x.textContent)===t});return {tag:el.tagName.toLowerCase(),from:t,nth:l2.indexOf(el),count:l2.length}}
+function kind(el){var t=el.tagName;if(t==='HEADER')return 'Header';if(t==='FOOTER')return 'Footer';if(t==='NAV')return 'Menu';if(/^H[1-6]$/.test(t))return 'Heading';if(t==='P')return 'Text';if(t==='IMG')return 'Image';if(t==='VIDEO')return 'Video';
+ if(t==='A'||t==='BUTTON')return /background|border/.test(el.getAttribute('style')||'')?'Button':'Link';if(t==='UL'||t==='OL')return 'List';if(t==='LI')return 'List item';if(t==='FORM')return 'Form';
+ if(t==='SECTION'||el.parentNode===ROOT)return 'Section';return el.children.length?'Container':'Text'}
+function label(el){if(el.tagName==='IMG')return el.getAttribute('alt')||'(no alt text)';var h=el.querySelector&&el.querySelector('h1,h2,h3,h4');if(!LEAF.test(el.tagName)&&h)return n(h.textContent);return n(el.textContent)}
+function kids(el){return Array.prototype.filter.call(el.children,function(c){return !SKIP.test(c.tagName)&&(c.offsetWidth>0||c.offsetHeight>0||c.hasAttribute('data-ws-hidden'))&&(n(c.textContent)||c.tagName==='IMG'||c.querySelector('img,video'))})}
+// Wrappers with one child collapse into that child, so the tree reads like the page.
+function down(el){var k=kids(el);while(!LEAF.test(el.tagName)&&k.length===1&&el.parentNode!==ROOT&&el!==ROOT&&!n(Array.prototype.filter.call(el.childNodes,function(x){return x.nodeType===3}).map(function(x){return x.textContent}).join(''))){el=k[0];k=kids(el)}return el}
+function tree(){var out=[];function walk(el,d,parentPath){kids(el).forEach(function(c0){var c=d===0?c0:down(c0);var k=LEAF.test(c.tagName)?[]:kids(c);
+  out.push({path:pathOf(c),parent:parentPath,depth:d,kind:kind(c),label:label(c).slice(0,70),key:key(c),hidden:c.hasAttribute('data-ws-hidden'),marks:c.getAttribute('data-ws')||'',open:false,hasKids:k.length>0});
+  if(d<6&&k.length)walk(c,d+1,pathOf(c))})}
+ walk(ROOT,0,pathOf(ROOT));return out}
+var PROPS=['font-size','font-weight','line-height','letter-spacing','text-transform','text-align','color','background-color','padding-top','padding-right','padding-bottom','padding-left','margin-top','margin-right','margin-bottom','margin-left','border-radius','max-width','display'];
+var SEL=null,ORIG={};
+function select(el,scroll){if(SEL){SEL.removeAttribute('data-ws-sel');for(var p in ORIG)SEL.style.setProperty(p,ORIG[p].v,ORIG[p].pr);ORIG={}}
+ SEL=el;if(!el){parent.postMessage({ws:'selected',el:null},'*');return}
+ el.setAttribute('data-ws-sel','');if(scroll)el.scrollIntoView({behavior:'smooth',block:'center'});
+ var cs=getComputedStyle(el),st={};PROPS.forEach(function(p){st[p]=cs.getPropertyValue(p)});
+ var anc=[],a=el.parentNode;while(a&&a!==APP&&a!==ROOT){if(n(a.textContent))anc.unshift({path:pathOf(a),kind:kind(a),label:label(a).slice(0,40)});a=a.parentNode}
+ parent.postMessage({ws:'selected',el:{path:pathOf(el),kind:kind(el),label:label(el).slice(0,70),key:key(el),styles:st,marks:el.getAttribute('data-ws')||'',ancestors:anc}},'*')}
+document.addEventListener('click',function(e){var el=e.target;if(!APP.contains(el))return;var sv=el.closest&&el.closest('svg');if(sv)el=sv.parentNode;select(el,false)},true);
+window.addEventListener('message',function(e){var d=e.data||{};
+ if(d.ws==='tree?')parent.postMessage({ws:'tree',nodes:tree()},'*');
+ if(d.ws==='pick'){var el=byPath(d.path);if(el)select(el,true)}
+ if(d.ws==='unpick')select(null);
+ // Live preview of style changes on the selected element (undone on the next selection or reload).
+ if(d.ws==='live-style'&&SEL){for(var p in d.css){if(!(p in ORIG))ORIG[p]={v:SEL.style.getPropertyValue(p),pr:SEL.style.getPropertyPriority(p)};if(d.css[p])SEL.style.setProperty(p,d.css[p],'important');else SEL.style.setProperty(p,ORIG[p].v,ORIG[p].pr)}}
+ if(d.ws==='hover-path'){Array.prototype.forEach.call(document.querySelectorAll('[data-ws-pick]'),function(x){x.removeAttribute('data-ws-pick')});var h=d.path!=null&&byPath(d.path);if(h)h.setAttribute('data-ws-pick','')}
+});
+})();`;
+
 const EDIT_JS = `(function(){
 var TEXT='h1,h2,h3,h4,h5,h6,p,li,a,span,strong,em,b,button,label,td,th,blockquote,figcaption,small,div';
 var APP=document.getElementById('app');

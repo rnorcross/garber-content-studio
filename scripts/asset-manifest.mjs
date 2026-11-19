@@ -13,7 +13,8 @@ if (existsSync(root)) {
       if (!existsSync(d)) continue;
       for (const f of readdirSync(d)) {
         const s = statSync(path.join(d, f));
-        if (s.isFile()) files.push({ path: `${dir}/${f}`, size: s.size });
+        // Only images and video: other files (like og/manifest.json) aren't used by pages, and Blob refuses them.
+        if (s.isFile() && /\.(webp|jpe?g|png|gif|svg|avif|mp4|webm)$/i.test(f)) files.push({ path: `${dir}/${f}`, size: s.size });
       }
     }
     out[slug] = files;
