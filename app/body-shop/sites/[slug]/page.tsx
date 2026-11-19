@@ -20,10 +20,12 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const site = await getSite(slug);
   if (!site) notFound();
-  const pages = await sql<(Pick<BsPage, 'id' | 'path' | 'title' | 'published_at' | 'published_by'> & { changed: boolean; n: number })[]>`
-    select id, path, title, published_at, published_by,
-      (edits <> live_edits or meta <> live_meta) as changed, jsonb_array_length(edits)::int as n
+  const pages = await sql<(Pick<BsPage, 'id' | 'path' | 'title' | 'published_at' | 'published_by' | 'status'> & { changed: boolean; n: number })[]>`
+    select id, path, title, published_at, published_by, status,
+      (edits <> live_edits or meta <> live_meta or status = 'draft') as changed, jsonb_array_length(edits)::int as n
     from bs_pages where site_id = ${site.id} order by path`;
+  const redirects = await sql<{ id: number; from_path: string; to_path: string; note: string | null; created_by: string | null }[]>`
+    select id, from_path, to_path, note, created_by from bs_redirects where site_id = ${site.id} order by from_path`;
   const waiting = pages.filter((p) => p.changed).length + (siteChanged(site) ? 1 : 0);
 
   return (
@@ -41,7 +43,7 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
           </div>
         </div>
 
-        <SiteTools slug={site.slug} edits={site.edits} liveEdits={site.live_edits} domains={site.domains} waiting={waiting} />
+        <SiteTools slug={site.slug} edits={site.edits} liveEdits={site.live_edits} domains={site.domains} waiting={waiting} redirects={redirects} />
 
         {GROUPS.map(([label, test]) => {
           const list = pages.filter((p) => test(p.path));
@@ -57,7 +59,9 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
                       <div className="bs-row-sub">{p.path}</div>
                     </div>
                     <div className="row" style={{ flexWrap: 'nowrap' }}>
-                      {p.changed ? <span className="chip warn">Unpublished</span> : <span className="chip ok">Live</span>}
+                      {p.status === 'hidden' ? <span className="chip bad">Hidden</span>
+                        : p.status === 'draft' ? <span className="chip warn">New, not published</span>
+                        : p.changed ? <span className="chip warn">Unpublished</span> : <span className="chip ok">Live</span>}
                       {p.n > 0 && <span className="chip">{p.n} edit{p.n === 1 ? '' : 's'}</span>}
                       <span className="btn sm">Edit</span>
                     </div>

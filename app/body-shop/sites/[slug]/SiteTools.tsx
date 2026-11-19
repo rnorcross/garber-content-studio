@@ -6,10 +6,13 @@ import { api } from '@/lib/client';
 import type { Edit } from '@/lib/bodyshop';
 
 /** Site-wide changes: find & replace on every page, publish everything, domains. */
-export default function SiteTools({ slug, edits, liveEdits, domains, waiting }: {
+export default function SiteTools({ slug, edits, liveEdits, domains, waiting, redirects }: {
   slug: string; edits: Edit[]; liveEdits: Edit[]; domains: string[]; waiting: number;
+  redirects: { id: number; from_path: string; to_path: string; note: string | null; created_by: string | null }[];
 }) {
   const router = useRouter();
+  const [rFrom, setRFrom] = useState('');
+  const [rTo, setRTo] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [busy, setBusy] = useState('');
@@ -99,16 +102,44 @@ export default function SiteTools({ slug, edits, liveEdits, domains, waiting }: 
           {edits.map((e) => (
             <div key={e.id} className="bs-edit">
               <span className={'chip' + (live.has(e.id) ? ' ok' : ' warn')}>{live.has(e.id) ? 'Live' : 'Draft'}</span>
-              <span className="bs-edit-kind">{({ replace: 'Replace', img: 'Image', text: 'Text', link: 'Link', alt: 'Alt text' } as const)[e.kind]}</span>
-              <span className="bs-edit-from">{e.kind === 'img' || e.kind === 'alt' ? e.from.split('/').pop() : e.from}</span>
-              <span>→</span>
-              <span className="bs-edit-to">{e.kind === 'img' ? e.to.split('/').pop() : e.to.replace(/<[^>]+>/g, '')}</span>
+              <span className="bs-edit-kind">{({ replace: 'Replace', img: 'Image', text: 'Text', link: 'Link', alt: 'Alt text', hide: 'Hidden', dup: 'Added item' } as const)[e.kind]}</span>
+              <span className="bs-edit-from">{e.kind === 'img' || e.kind === 'alt' ? e.from.split('/').pop() : e.kind === 'hide' ? (e.label || e.from).slice(0, 60) : e.from.slice(0, 80)}</span>
+              {e.kind !== 'hide' && <span>→</span>}
+              {e.kind !== 'hide' && <span className="bs-edit-to">{e.kind === 'img' ? e.to.split('/').pop() : e.to.replace(/<[^>]+>/g, '')}</span>}
               {check?.siteBroken.includes(e.id) && <span className="chip bad">Not found</span>}
               <button className="btn sm ghost danger" disabled={!!busy} onClick={() => run('rm', { action: 'remove', id: e.id })}>Remove</button>
             </div>
           ))}
         </div>
       )}
+
+      <div className="card card-pad stack" style={{ gridColumn: '1 / -1' }}>
+        <div>
+          <div className="bs-card-title" style={{ marginTop: 0 }}>Redirects · {redirects.length}</div>
+          <p className="sub" style={{ fontSize: 13.5 }}>
+            Old addresses that should send visitors (and Google) somewhere else, with a permanent 301. End an address with * to cover
+            everything under it, like /category/*. Redirects only apply when no live page has that address.
+          </p>
+        </div>
+        <div className="row" style={{ flexWrap: 'nowrap' }}>
+          <input className="input" placeholder="Old address, e.g. /about-rf-collision/" value={rFrom} onChange={(e) => setRFrom(e.target.value)} />
+          <input className="input" placeholder="Goes to, e.g. /about-garber-collision-center/" value={rTo} onChange={(e) => setRTo(e.target.value)} />
+          <button className="btn dark" disabled={!rFrom.trim() || !rTo.trim() || !!busy}
+            onClick={async () => { if (await run('redir', { action: 'redirect-add', from: rFrom, to: rTo })) { setRFrom(''); setRTo(''); } }}>Add</button>
+        </div>
+        <div className="row">
+          <button className="btn sm" disabled={!!busy} onClick={() => run('wp', { action: 'redirect-wordpress' })}>Add common WordPress addresses</button>
+          <span className="sub" style={{ fontSize: 12.5 }}>/feed/, /category/*, /author/*, /wp-admin/* and similar, all to the home page.</span>
+        </div>
+        {redirects.map((r) => (
+          <div key={r.id} className="bs-edit">
+            <span className="bs-edit-from" style={{ textDecoration: 'none' }}>{r.from_path}</span><span>→</span>
+            <span className="bs-edit-to">{r.to_path}</span>
+            {r.note && <span className="bs-row-sub">{r.note}</span>}
+            <button className="btn sm ghost danger" disabled={!!busy} onClick={() => run('rm', { action: 'redirect-remove', id: r.id })}>Remove</button>
+          </div>
+        ))}
+      </div>
 
       <div className="card card-pad stack" style={{ gridColumn: '1 / -1' }}>
         <div className="bs-card-title" style={{ marginTop: 0 }}>Domains</div>

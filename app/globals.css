@@ -290,3 +290,8 @@ body:has(.side) { padding-left: var(--side-w); }
 .bs-hours { display: grid; grid-template-columns: 110px 90px 1fr 1fr; gap: 8px 10px; align-items: center; font-size: 14px; }
 .bs-hours .day { font-weight: 650; }
 .bs-changed-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); margin-left: 6px; vertical-align: middle; }
+.bs-tabs button { padding-left: 6px; padding-right: 6px; font-size: 12.5px; }
+.bs-section-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid var(--line); border-radius: var(--radius); padding: 8px 10px; }
+.bs-section-name { all: unset; cursor: pointer; display: flex; flex-direction: column; min-width: 0; flex: 1; font-weight: 650; font-size: 13.5px; }
+.bs-section-name .off { opacity: 0.45; text-decoration: line-through; }
+.bs-section-name span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -1,7 +1,7 @@
 import { revalidateTag } from 'next/cache';
 import { sql } from '@/lib/db';
 import { route, json, fail } from '@/lib/api';
-import { getSite, editId, brokenEdits, type BsPage, type Edit } from '@/lib/bodyshop';
+import { getSite, editId, brokenEdits, cleanPath, type BsPage, type Edit } from '@/lib/bodyshop';
 import { cleanInfo } from '@/lib/bodyshop-info';
 
 type Ctx = { params: Promise<{ slug: string }> };
@@ -28,8 +28,9 @@ export const POST = route<Ctx>(async (req, user, ctx) => {
     case 'publish-all': {
       const pages = await sql<Pick<BsPage, 'id' | 'edits' | 'meta'>[]>`select id, edits, meta from bs_pages where site_id = ${site.id}`;
       await sql.begin(async (tx) => {
-        await tx`update bs_pages set live_edits = edits, live_meta = meta, published_at = now(), published_by = ${user.name}
-          where site_id = ${site.id} and (live_edits <> edits or live_meta <> meta)`;
+        await tx`update bs_pages set live_edits = edits, live_meta = meta, published_at = now(), published_by = ${user.name},
+          status = case when status = 'draft' then 'live' else status end
+          where site_id = ${site.id} and (live_edits <> edits or live_meta <> meta or status = 'draft')`;
         await tx`update bs_sites set live_edits = edits, live_info = info, published_at = now() where id = ${site.id}`;
         await tx`insert into bs_publishes (site_id, page_id, snapshot, note, user_name)
           values (${site.id}, null, ${sql.json({ site: { edits: site.edits, info: site.info }, pages: pages.map((p) => ({ id: p.id, edits: p.edits, meta: p.meta })) } as any)}, 'Published whole site', ${user.name})`;
@@ -57,6 +58,36 @@ export const POST = route<Ctx>(async (req, user, ctx) => {
       }
       const siteBroken = site.edits.filter((e) => !siteHit.has(e.id)).map((e) => e.id);
       return json({ pages: out, siteBroken });
+    }
+    case 'redirect-add': {
+      const from = cleanPath(String(b.from || ''));
+      let to = String(b.to || '').trim();
+      if (from === '/' || from.length < 2) return fail('Enter the old address, like /about-rf-collision/');
+      if (!to) return fail('Enter where it should go');
+      if (!/^https?:\/\//.test(to)) to = cleanPath(to);
+      if (to === from) return fail('A redirect can’t point to itself');
+      await sql`insert into bs_redirects (site_id, from_path, to_path, note, created_by)
+        values (${site.id}, ${from}, ${to}, ${b.note ? String(b.note) : null}, ${user.name})
+        on conflict (site_id, from_path) do update set to_path = excluded.to_path, note = excluded.note`;
+      revalidateTag(`bs:${site.slug}`);
+      return json({ ok: true });
+    }
+    case 'redirect-remove': {
+      await sql`delete from bs_redirects where site_id = ${site.id} and id = ${Number(b.id)}`;
+      revalidateTag(`bs:${site.slug}`);
+      return json({ ok: true });
+    }
+    case 'redirect-wordpress': {
+      // The addresses WordPress sites have that the new site doesn't.
+      const rules: [string, string][] = [
+        ['/feed/', '/'], ['/comments/feed/', '/'], ['/wp-admin/*', '/'], ['/wp-login.php', '/'],
+        ['/category/*', '/'], ['/author/*', '/'], ['/tag/*', '/'], ['/page/*', '/'],
+        ['/wp-content/*', '/'], ['/xmlrpc.php', '/'],
+      ];
+      for (const [f, t] of rules) await sql`insert into bs_redirects (site_id, from_path, to_path, note, created_by)
+        values (${site.id}, ${f}, ${t}, ${'WordPress address'}, ${user.name}) on conflict (site_id, from_path) do nothing`;
+      revalidateTag(`bs:${site.slug}`);
+      return json({ ok: true });
     }
     case 'domains': {
       const domains = String(b.domains ?? '').split(/[\s,]+/).map((d) => d.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '')).filter(Boolean);

@@ -24,9 +24,17 @@ export type Edit = EditBase & (
   | { kind: 'link'; from: string; to: string; nth?: number; newTab?: boolean; text?: string }
   | { kind: 'alt'; from: string; to: string; nth?: number }
   | { kind: 'replace'; from: string; to: string }
+  // Hide an element (a section, a list item, a card). `from` is its text, `label` is for people.
+  | { kind: 'hide'; tag: string; from: string; nth?: number; label?: string }
+  // Add a copy of a list item or card right after it, with `leaf` (a text inside it) changed to `to`.
+  | { kind: 'dup'; tag: string; from: string; nth?: number; leaf: string; to: string }
 );
 
-export type Meta = { title?: string; description?: string };
+/** Search & social settings for a page. */
+export type Meta = { title?: string; description?: string; ogImage?: string; noindex?: boolean };
+/** live: served to visitors · draft: new, not published yet · hidden: unpublished (redirects apply). */
+export type PageStatus = 'live' | 'draft' | 'hidden';
+export type BsRedirect = { id: number; site_id: number; from_path: string; to_path: string; note: string | null; created_by: string | null; created_at: string };
 
 export type BsSite = {
   id: number; slug: string; name: string; city: string | null; domains: string[];
@@ -38,6 +46,7 @@ export type BsPage = {
   id: number; site_id: number; path: string; title: string; base_html: string;
   meta: Meta; live_meta: Meta; edits: Edit[]; live_edits: Edit[];
   published_at: string | null; published_by: string | null; updated_at: string;
+  status: PageStatus;
 };
 
 /** The other shops on garbercollision.com, shown as "not added yet" until they're imported. */
@@ -95,6 +104,17 @@ create index if not exists bs_publishes_idx on bs_publishes(site_id, created_at 
 alter table bs_sites add column if not exists info      jsonb not null default '{}';
 alter table bs_sites add column if not exists live_info jsonb not null default '{}';
 alter table bs_sites add column if not exists info_base jsonb not null default '{}';
+alter table bs_pages add column if not exists status text not null default 'live';
+create table if not exists bs_redirects (
+  id          serial primary key,
+  site_id     int not null references bs_sites(id) on delete cascade,
+  from_path   text not null,
+  to_path     text not null,
+  note        text,
+  created_by  text,
+  created_at  timestamptz not null default now(),
+  unique (site_id, from_path)
+);
 `;
 
 let ready: Promise<void> | null = null;
@@ -154,13 +174,14 @@ const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
  */
 const APPLY_JS = `(function(){var E=window.__WS||[],L=window.__WSL||'';function n(s){return (s||'').replace(/\\s+/g,' ').trim()}
 function mk(el){var v=el.getAttribute('data-ws');return v?v.split(' '):[]}
+function leaf(r,t){var all=[r].concat(Array.prototype.slice.call(r.querySelectorAll('*'))),hit=null;for(var i=0;i<all.length;i++)if(n(all[i].textContent)===t)hit=all[i];return hit}
 window.__wsApply=function(root){root=root||document;
 for(var i=0;i<E.length;i++){var e=E[i];if(e.kind==='replace')continue;
-var els=root.querySelectorAll(e.kind==='text'?e.tag:e.kind==='link'?'a':'img'),c=0;
+var els=root.querySelectorAll(e.kind==='text'||e.kind==='hide'||e.kind==='dup'?e.tag:e.kind==='link'?'a':'img'),c=0;
 for(var j=0;j<els.length;j++){var el=els[j],m=mk(el),done=m.indexOf(e.id)>=0;
-if(!done&&!(e.kind==='text'?n(el.textContent)===e.from:e.kind==='link'?el.getAttribute('href')===e.from:el.getAttribute('src')===e.from))continue;
+if(el.hasAttribute('data-ws-clone'))continue;if(!done&&!(e.kind==='text'||e.kind==='hide'||e.kind==='dup'?n(el.textContent)===e.from:e.kind==='link'?el.getAttribute('href')===e.from:el.getAttribute('src')===e.from))continue;
 var x=c++;if(e.nth!=null&&x!==e.nth)continue;if(done)continue;
-if(e.kind==='text')el.innerHTML=e.to;else if(e.kind==='img'){el.setAttribute('src',e.to);el.removeAttribute('srcset')}
+if(e.kind==='text')el.innerHTML=e.to;else if(e.kind==='hide')el.setAttribute('data-ws-hidden','');else if(e.kind==='dup'){var cl=el.cloneNode(true);cl.removeAttribute('data-ws');cl.setAttribute('data-ws-clone',e.id);var lf=leaf(cl,e.leaf);if(lf)lf.textContent=e.to;el.parentNode.insertBefore(cl,el.nextSibling)}else if(e.kind==='img'){el.setAttribute('src',e.to);el.removeAttribute('srcset')}
 else if(e.kind==='alt')el.setAttribute('alt',e.to);
 else{el.setAttribute('href',e.to);if(e.newTab===true){el.setAttribute('target','_blank');el.setAttribute('rel','noopener')}else if(e.newTab===false)el.removeAttribute('target')}
 m.push(e.id);el.setAttribute('data-ws',m.join(' '))}}
@@ -172,17 +193,27 @@ function applyServer($: cheerio.CheerioAPI, app: cheerio.Cheerio<any>, edits: Ed
   for (const e of edits) {
     if (e.kind === 'replace') continue;
     let c = 0, hit = 0;
-    app.find(e.kind === 'text' ? e.tag : e.kind === 'link' ? 'a' : 'img').each((_, node) => {
+    const byText = e.kind === 'text' || e.kind === 'hide' || e.kind === 'dup';
+    app.find(byText ? (e as any).tag : e.kind === 'link' ? 'a' : 'img').each((_, node) => {
       const el = $(node);
+      if (el.attr('data-ws-clone') !== undefined) return;
       const m = (el.attr('data-ws') || '').split(' ').filter(Boolean);
       const done = m.includes(e.id);
-      const match = done || (e.kind === 'text' ? norm(el.text()) === e.from : e.kind === 'link' ? el.attr('href') === e.from : el.attr('src') === e.from);
+      const match = done || (byText ? norm(el.text()) === e.from : e.kind === 'link' ? el.attr('href') === e.from : el.attr('src') === e.from);
       if (!match) return;
       const x = c++;
       if (e.nth != null && x !== e.nth) return;
       hit++;
       if (done) return;
       if (e.kind === 'text') el.html(e.to);
+      else if (e.kind === 'hide') el.attr('data-ws-hidden', '');
+      else if (e.kind === 'dup') {
+        const cl = el.clone().removeAttr('data-ws').attr('data-ws-clone', e.id);
+        // The deepest element inside the copy that shows `leaf` gets the new text.
+        const lf = [cl, ...cl.find('*').toArray().map((x) => $(x))].filter((x) => norm(x.text()) === e.leaf).pop();
+        lf?.text(e.to);
+        el.after(cl);
+      }
       else if (e.kind === 'img') el.attr('src', e.to).removeAttr('srcset');
       else if (e.kind === 'alt') el.attr('alt', e.to);
       else {
@@ -242,6 +273,11 @@ export function renderPage(
     $('meta[name="description"]').attr('content', meta.description);
     $('meta[property="og:description"]').attr('content', meta.description);
   }
+  if (meta.ogImage) {
+    $('meta[property="og:image"], meta[name="twitter:image"]').attr('content', meta.ogImage);
+    $('meta[property="og:image:width"], meta[property="og:image:height"]').remove();
+  }
+  if (meta.noindex) $('head').append('<meta name="robots" content="noindex">');
 
   // 4. Text, image, link and alt-text edits on the server-rendered page.
   const app = $('#app');
@@ -267,6 +303,7 @@ export function renderPage(
     $('head').append(`<style>${EDIT_CSS}</style>`);
     $('body').append(`<script>${EDIT_JS}</script>`);
   } else {
+    $('head').append('<style>[data-ws-hidden]{display:none!important}</style>');
     $('head').append(`<script>window.__WSB=${JSON.stringify(base)};window.__WSL=${JSON.stringify(lb)};window.__WS=${JSON.stringify(overlay).replace(/</g, '\\u003c')};${APPLY_JS}</script>`);
     if (!live) $('head').append('<meta name="robots" content="noindex">');
   }
@@ -281,6 +318,9 @@ export function brokenEdits(site: BsSite, page: BsPage) {
 }
 
 const EDIT_CSS = `
+[data-ws-hidden]{opacity:.32;outline:2px dashed #c2341d !important;outline-offset:-2px}
+[data-ws-clone]{outline:2px dashed #0a8754 !important;outline-offset:2px}
+[data-ws-pick]{outline:3px solid #b8922f !important;outline-offset:2px}
 [data-ws-hover]{outline:2px dashed #1122d7 !important;outline-offset:2px;cursor:text}
 img[data-ws-hover]{cursor:pointer}
 [contenteditable="true"]{outline:2px solid #1122d7 !important;outline-offset:2px;background:rgba(17,34,215,.04)}
@@ -315,7 +355,25 @@ document.addEventListener('click',function(e){var el=editable(e.target);var a=e.
  el.addEventListener('keydown',function k(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();el.blur()}if(ev.key==='Escape'){el.innerHTML=before;el.blur()}});
  el.addEventListener('blur',function b(){el.removeEventListener('blur',b);el.contentEditable='false';if(el.innerHTML!==before)parent.postMessage({ws:'text',tag:el.tagName.toLowerCase(),from:from,to:el.innerHTML.trim(),nth:pl.nth,count:pl.count},'*')});
 },true);
-window.addEventListener('message',function(e){if(e.data&&e.data.ws==='scroll')window.scrollTo(0,e.data.y)});
+// A repeating item around the clicked element (list item, card, nav link): the nearest
+// ancestor that has a same-tag, same-class sibling. Lets the editor hide it or add one after it.
+function item(el){var cur=el;for(var d=0;d<7&&cur&&cur!==APP;d++){var p=cur.parentNode;if(!p||p===APP)break;
+ var sib=Array.prototype.filter.call(p.children,function(c){return c.tagName===cur.tagName&&(c.getAttribute('class')||'')===(cur.getAttribute('class')||'')});
+ if(sib.length>=2&&cur.tagName!=='SECTION'&&n(cur.textContent))return cur;cur=p}return null}
+document.addEventListener('click',function(e){var el=editable(e.target);if(!el||el.tagName==='IMG'){parent.postMessage({ws:'noitem'},'*');return}
+ var it=item(el);if(!it){parent.postMessage({ws:'noitem'},'*');return}
+ var t=n(it.textContent);var p=place(sameText(it,t),it);
+ parent.postMessage({ws:'item',tag:it.tagName.toLowerCase(),from:t,nth:p.nth,count:p.count,leaf:n(el.textContent),label:t.slice(0,70)},'*')},true);
+// The page's sections and images, for the Sections and Search tabs.
+var SECS=[];
+function scan(){var root=APP.firstElementChild||APP;SECS=Array.prototype.filter.call(root.children,function(c){return n(c.textContent)&&c.offsetHeight>30});
+ var secs=SECS.map(function(c,i){var h=c.querySelector('h1,h2,h3,h4');var t=n(c.textContent);var p=place(sameText(c,t),c);
+  return {i:i,tag:c.tagName.toLowerCase(),from:t,nth:p.nth,count:p.count,label:(c.tagName==='HEADER'?'Header':c.tagName==='FOOTER'?'Footer':h?n(h.textContent):t).slice(0,70),marks:c.getAttribute('data-ws')||'',hidden:c.hasAttribute('data-ws-hidden')}});
+ var seen={},imgs=[];Array.prototype.forEach.call(APP.querySelectorAll('img'),function(im){var s=im.getAttribute('src');if(!s||seen[s])return;seen[s]=1;imgs.push({src:s,alt:im.getAttribute('alt')||''})});
+ parent.postMessage({ws:'scan',sections:secs,images:imgs},'*')}
+if(document.readyState==='complete')scan();else window.addEventListener('load',scan);
+window.addEventListener('message',function(e){if(e.data&&e.data.ws==='scroll')window.scrollTo(0,e.data.y);if(e.data&&e.data.ws==='scan?')scan();
+ if(e.data&&e.data.ws==='goto'){var s=SECS[e.data.i];if(s){s.scrollIntoView({behavior:'smooth',block:'start'});s.setAttribute('data-ws-pick','');setTimeout(function(){s.removeAttribute('data-ws-pick')},1600)}}});
 var t;window.addEventListener('scroll',function(){clearTimeout(t);t=setTimeout(function(){parent.postMessage({ws:'scrolled',y:window.scrollY},'*')},150)});
 })();`;
 
@@ -354,8 +412,57 @@ export async function getPageByPath(siteId: number, p: string) {
 export async function listSitemapPages(siteId: number) {
   return sql<{ path: string; published_at: string | null; noindex: boolean }[]>`
     select path, published_at,
-           base_html ~* '<meta[^>]+name=["'']robots["''][^>]+noindex' as noindex
-    from bs_pages where site_id = ${siteId} order by path`;
+           (base_html ~* '<meta[^>]+name=["'']robots["''][^>]+noindex' or coalesce((live_meta->>'noindex')::boolean, false)) as noindex
+    from bs_pages where site_id = ${siteId} and status = 'live' order by path`;
+}
+
+/** Where a missing path should go: an exact match first, then the longest "prefix*" rule. */
+export async function findRedirect(siteId: number, p: string) {
+  const rows = await sql<BsRedirect[]>`select * from bs_redirects where site_id = ${siteId}`;
+  const want = [p, p.endsWith('/') ? p.slice(0, -1) : p + '/'];
+  const exact = rows.find((r) => want.includes(r.from_path));
+  if (exact) return exact.to_path;
+  const wild = rows.filter((r) => r.from_path.endsWith('*') && p.startsWith(r.from_path.slice(0, -1)))
+    .sort((a, b) => b.from_path.length - a.from_path.length)[0];
+  return wild?.to_path ?? null;
+}
+
+/** Cleans a path someone typed: leading and trailing slash, lowercase, no spaces or query. */
+export function cleanPath(input: string) {
+  let p = input.trim().toLowerCase().replace(/^https?:\/\/[^/]+/, '').replace(/[?#].*$/, '');
+  p = p.replace(/[^a-z0-9/_*.-]+/g, '-').replace(/\/{2,}/g, '/');
+  if (!p.startsWith('/')) p = '/' + p;
+  if (!p.endsWith('/') && !p.endsWith('*') && !/\.[a-z0-9]+$/.test(p)) p += '/';
+  return p;
+}
+
+/**
+ * A new page that starts as a copy of another: same design and edits, its own address,
+ * title, description and (optionally) headline. It's a draft until someone publishes it.
+ */
+export async function duplicatePage(site: BsSite, src: BsPage, o: { path: string; title: string; description?: string; headline?: string; by: string }) {
+  const origin = `https://${site.domains.find((d) => !d.startsWith('www.')) ?? site.domains[0]}`;
+  let html = src.base_html;
+  // The page's own address in its canonical tag, share tags and search markup.
+  html = html.split(`${origin}${src.path}"`).join(`${origin}${o.path}"`);
+  const $ = cheerio.load(html);
+  $('title').text(o.title);
+  const edits: Edit[] = [...src.edits];
+  if (o.headline) {
+    const h1 = $('#app h1').first();
+    if (h1.length) {
+      // Through the overlay, so the change survives the page script re-drawing the hero.
+      const cur = norm(cheerio.load(renderPage(site, src, 'draft'))('#app h1').first().text());
+      edits.push({ id: editId(), kind: 'text', tag: 'h1', from: cur, to: esc(o.headline), scope: 'page', at: new Date().toISOString(), by: o.by });
+    }
+  }
+  const meta: Meta = { ...src.meta, title: o.title, ...(o.description ? { description: o.description } : {}) };
+  const [pg] = await sql<BsPage[]>`
+    insert into bs_pages (site_id, path, title, base_html, meta, live_meta, edits, live_edits, status, published_at, published_by)
+    values (${site.id}, ${o.path}, ${o.title.split(' | ')[0]}, ${$.html()}, ${sql.json(meta as any)}, ${sql.json({} as any)},
+            ${sql.json(edits as any)}, ${sql.json([] as any)}, 'draft', null, null)
+    returning *`;
+  return pg;
 }
 
 export async function getPage(id: number) {
@@ -368,6 +475,7 @@ export async function getPage(id: number) {
 export function pageChanged(site: BsSite, page: BsPage) {
   return JSON.stringify(page.edits) !== JSON.stringify(page.live_edits)
     || JSON.stringify(page.meta) !== JSON.stringify(page.live_meta)
+    || page.status === 'draft'
     || siteChanged(site);
 }
 
