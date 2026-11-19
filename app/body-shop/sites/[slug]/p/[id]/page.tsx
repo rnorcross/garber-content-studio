@@ -30,7 +30,7 @@ export default async function EditPage({ params }: { params: Promise<{ slug: str
     <>
       <TopBar user={user} on="bs-sites" />
       <PageEditor
-        site={{ slug: site.slug, name: site.name, edits: site.edits, liveEdits: site.live_edits }}
+        site={{ id: site.id, slug: site.slug, name: site.name, edits: site.edits, liveEdits: site.live_edits }}
         page={{ id: page.id, path: page.path, title: page.title, meta: page.meta, liveMeta: page.live_meta, edits: page.edits, liveEdits: page.live_edits, publishedAt: page.published_at, publishedBy: page.published_by, status: page.status }}
         pages={pages}
         canPublish={await canPublish(user)}

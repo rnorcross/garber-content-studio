@@ -3,7 +3,7 @@ import { upload, uploadPresigned } from '@vercel/blob/client';
 
 export type Media = {
   id: number; url: string; pathname: string; filename: string; content_type: string | null; size: number | null;
-  width: number | null; height: number | null; alt: string | null; dealership_id: number | null;
+  width: number | null; height: number | null; alt: string | null; dealership_id: number | null; bs_site_id?: number | null;
   dealership?: string | null; uploaded_by_name?: string | null; created_at: string;
 };
 
@@ -25,38 +25,53 @@ async function dimensions(file: Blob) {
   }
 }
 
-/** Scales very large JPEG/PNG/WebP photos down to MAX_EDGE on their long side. */
-async function shrink(file: File): Promise<{ file: File; width: number | null; height: number | null }> {
+/**
+ * Scales very large JPEG/PNG/WebP photos down to MAX_EDGE on their long side. With `webp`
+ * (body shop uploads), JPEG and PNG photos are also converted to WebP, which is usually a
+ * third the size; PNGs with transparency stay WebP with transparency.
+ */
+async function shrink(file: File, webp = false): Promise<{ file: File; width: number | null; height: number | null }> {
   const { width, height, bitmap } = await dimensions(file);
-  if (!bitmap || !width || !height || !/image\/(jpeg|png|webp)/.test(file.type) || Math.max(width, height) <= MAX_EDGE) {
+  const convert = webp && /image\/(jpeg|png)/.test(file.type);
+  if (!bitmap || !width || !height || !/image\/(jpeg|png|webp)/.test(file.type) || (Math.max(width, height) <= MAX_EDGE && !convert)) {
     bitmap?.close();
     return { file, width, height };
   }
-  const k = MAX_EDGE / Math.max(width, height);
+  const k = Math.min(1, MAX_EDGE / Math.max(width, height));
   const w = Math.round(width * k), h = Math.round(height * k);
   const canvas = new OffscreenCanvas(w, h);
   canvas.getContext('2d')!.drawImage(bitmap, 0, 0, w, h);
   bitmap.close();
-  const out = await canvas.convertToBlob({ type: file.type, quality: 0.86 });
-  if (out.size >= file.size) return { file, width, height };
-  return { file: new File([out], file.name, { type: file.type }), width: w, height: h };
+  const type = convert ? 'image/webp' : file.type;
+  const out = await canvas.convertToBlob({ type, quality: convert ? 0.82 : 0.86 });
+  if (out.size >= file.size && k === 1) return { file, width, height };
+  const name = convert ? file.name.replace(/\.(jpe?g|png)$/i, '') + '.webp' : file.name;
+  return { file: new File([out], name, { type }), width: w, height: h };
 }
+
+/** Over this, an image on a web page is worth shrinking (it slows phones down). */
+export const LARGE_IMAGE = 500 * 1024;
 
 const safe = (s: string) => s.toLowerCase().replace(/[^a-z0-9.]+/g, '-').replace(/^-|-$/g, '') || 'file';
 
 /** Uploads a file to the media library and returns its record. */
 export async function uploadMedia(
   input: File,
-  opts: { dealershipId?: number | null; dealerSlug?: string | null; alt?: string; onProgress?: (pct: number) => void } = {},
+  opts: {
+    dealershipId?: number | null; dealerSlug?: string | null; alt?: string; onProgress?: (pct: number) => void;
+    /** Body shop sites: their own folder in Blob, and photos converted to WebP. */
+    bsSiteId?: number | null; bsSlug?: string | null;
+  } = {},
 ): Promise<Media> {
-  const { file, width, height } = await shrink(input);
-  const folder = opts.dealerSlug ? `dealers/${opts.dealerSlug}` : 'group';
+  const { file, width, height } = await shrink(input, !!opts.bsSlug);
+  const folder = opts.bsSlug ? `body-shop/${opts.bsSlug}/media` : opts.dealerSlug ? `dealers/${opts.dealerSlug}` : 'group';
 
   if ((await storageMode()) === 'local') {
     const form = new FormData();
     form.set('file', file);
     form.set('folder', folder);
     if (opts.dealershipId) form.set('dealershipId', String(opts.dealershipId));
+    if (opts.bsSiteId) form.set('bsSiteId', String(opts.bsSiteId));
     if (width) form.set('width', String(width));
     if (height) form.set('height', String(height));
     if (opts.alt) form.set('alt', opts.alt);
@@ -78,7 +93,7 @@ export async function uploadMedia(
   const r = await fetch('/api/media', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url: blob.url, pathname: blob.pathname, filename: file.name, contentType: file.type,
-      size: file.size, width, height, alt: opts.alt || null, dealershipId: opts.dealershipId ?? null }),
+      size: file.size, width, height, alt: opts.alt || null, dealershipId: opts.dealershipId ?? null, bsSiteId: opts.bsSiteId ?? null }),
   });
   const d = await r.json();
   if (!r.ok) throw new Error(d.error || 'Upload failed');

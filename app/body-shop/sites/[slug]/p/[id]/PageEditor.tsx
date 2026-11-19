@@ -8,7 +8,7 @@ import MediaPicker from '@/components/MediaPicker';
 import type { Edit, Meta, PageStatus } from '@/lib/bodyshop';
 
 type Props = {
-  site: { slug: string; name: string; edits: Edit[]; liveEdits: Edit[] };
+  site: { id: number; slug: string; name: string; edits: Edit[]; liveEdits: Edit[] };
   page: {
     id: number; path: string; title: string; meta: Meta; liveMeta: Meta; edits: Edit[]; liveEdits: Edit[];
     publishedAt: string | null; publishedBy: string | null; status: PageStatus;
@@ -55,6 +55,19 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
   const [newTab, setNewTab] = useState(false);
   const [item, setItem] = useState<Item | null>(null);
   const [addText, setAddText] = useState('');
+  // Claude: the text last clicked, an instruction, and a suggestion to accept or ignore.
+  const [focus, setFocus] = useState<{ tag: string; from: string; nth: number; count: number } | null>(null);
+  const [ask, setAsk] = useState('');
+  const [suggestion, setSuggestion] = useState('');
+  const [brief, setBrief] = useState('');
+  const [rewrites, setRewrites] = useState<{ tag: string; from: string; to: string }[]>([]);
+
+  async function claude(label: string, body: object) {
+    setBusy(label); setErr('');
+    try { return await api('/api/body-shop/ai', { pageId: page.id, ...body }); }
+    catch (e: any) { setErr(e.message); return null; }
+    finally { setBusy(''); }
+  }
   const [picker, setPicker] = useState<null | 'swap' | 'og'>(null);
   // When the same text, image or link appears more than once on the page: change only the
   // one that was clicked, or every copy. Site-wide edits always change every copy.
@@ -100,10 +113,11 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
       if (d.ws === 'scrolled') scrollY.current = d.y;
       else if (d.ws === 'scan') setScan({ sections: d.sections, images: d.images });
       else if (d.ws === 'text') act('save', { action: 'edit', kind: 'text', tag: d.tag, from: d.from, to: d.to, scope, ...one(d) });
-      else if (d.ws === 'img') { setImg({ src: d.src, alt: d.alt, nth: d.nth, count: d.count }); setAlt(d.alt); setTab('changes'); }
+      else if (d.ws === 'img') { setImg({ src: d.src, alt: d.alt, nth: d.nth, count: d.count }); setAlt(d.alt); setFocus(null); setTab('changes'); }
       else if (d.ws === 'link') { setLink(d); setHref(d.href); setNewTab(!!d.newTab); setTab('changes'); }
       else if (d.ws === 'nolink') setLink(null);
       else if (d.ws === 'item') { setItem(d); setAddText(''); }
+      else if (d.ws === 'focus') { setFocus(d); setSuggestion(''); setImg(null); }
       else if (d.ws === 'noitem') setItem(null);
     };
     window.addEventListener('message', on);
@@ -264,6 +278,36 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
                 <p className="bs-warn">{broken.length} {broken.length === 1 ? 'edit no longer matches' : 'edits no longer match'} anything on this page, so {broken.length === 1 ? 'it does' : 'they do'} nothing. They’re marked “Not found” below.</p>
               )}
 
+              {focus && mode === 'edit' && (
+                <div className="bs-change">
+                  <div className="row" style={{ justifyContent: 'space-between' }}>
+                    <div className="bs-card-title" style={{ marginTop: 0, fontSize: 15 }}>Rewrite with Claude</div>
+                    <button className="btn sm ghost" onClick={() => setFocus(null)}>Close</button>
+                  </div>
+                  <div className="bs-change-from" style={{ textDecoration: 'none' }}>“{focus.from.slice(0, 160)}{focus.from.length > 160 ? '…' : ''}”</div>
+                  <div className="row" style={{ gap: 6 }}>
+                    {['Shorter', 'Friendlier', 'Clearer', 'Mention insurance help'].map((q) => (
+                      <button key={q} className="btn sm ghost" onClick={() => setAsk(q)}>{q}</button>
+                    ))}
+                  </div>
+                  <input className="input" value={ask} onChange={(e) => setAsk(e.target.value)} placeholder="What should change? e.g. shorter, mention free estimates" />
+                  <button className="btn sm" disabled={!!busy}
+                    onClick={async () => { const r = await claude('ai', { action: 'rewrite', text: focus.from, tag: focus.tag, instruction: ask }); if (r?.text) setSuggestion(r.text); }}>
+                    {busy === 'ai' ? 'Writing…' : 'Suggest'}
+                  </button>
+                  {suggestion && (
+                    <>
+                      <textarea className="textarea" rows={3} value={suggestion} onChange={(e) => setSuggestion(e.target.value)} />
+                      <button className="btn sm dark" disabled={!!busy}
+                        onClick={async () => {
+                          const html = suggestion.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                          if (await act('save', { action: 'edit', kind: 'text', tag: focus.tag, from: focus.from, to: html, scope, ...one(focus) })) { setFocus(null); setSuggestion(''); }
+                        }}>Use this</button>
+                    </>
+                  )}
+                </div>
+              )}
+
               {item && mode === 'edit' && (
                 <div className="bs-change">
                   <div className="bs-card-title" style={{ marginTop: 0, fontSize: 15 }}>List item</div>
@@ -324,10 +368,15 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
                     <textarea className="textarea" rows={2} value={alt} onChange={(e) => setAlt(e.target.value)} placeholder="What the image shows, for screen readers and Google" />
                     <span className="hint">Leave empty only for decorative images.{img.count > 1 ? ` This image appears ${img.count} times on the page; the alt text changes on all of them.` : ''}</span>
                   </div>
-                  <button className="btn sm" disabled={!!busy || alt === img.alt}
-                    onClick={async () => { if (await act('save', { action: 'edit', kind: 'alt', from: img.src, to: alt, scope })) setImg({ ...img, alt }); }}>
-                    Save alt text
-                  </button>
+                  <div className="row">
+                    <button className="btn sm" disabled={!!busy || alt === img.alt}
+                      onClick={async () => { if (await act('save', { action: 'edit', kind: 'alt', from: img.src, to: alt, scope })) setImg({ ...img, alt }); }}>
+                      Save alt text
+                    </button>
+                    <button className="btn sm ghost" disabled={!!busy} onClick={async () => { const r = await claude('alt', { action: 'alt', src: img.src }); if (r?.alt) setAlt(r.alt); }}>
+                      {busy === 'alt' ? 'Looking…' : 'Suggest with Claude'}
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -405,8 +454,12 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
                   <img src={im.src} alt="" className="bs-img-current" style={{ maxHeight: 90 }} />
                   <input className="input" placeholder="Describe the image" value={altDraft[im.src] ?? ''}
                     onChange={(e) => setAltDraft({ ...altDraft, [im.src]: e.target.value })} />
-                  <button className="btn sm" disabled={!!busy || !(altDraft[im.src] ?? '').trim()}
-                    onClick={() => act('save', { action: 'edit', kind: 'alt', from: im.src, to: altDraft[im.src], scope: 'page' })}>Save alt text</button>
+                  <div className="row">
+                    <button className="btn sm" disabled={!!busy || !(altDraft[im.src] ?? '').trim()}
+                      onClick={() => act('save', { action: 'edit', kind: 'alt', from: im.src, to: altDraft[im.src], scope: 'page' })}>Save alt text</button>
+                    <button className="btn sm ghost" disabled={!!busy}
+                      onClick={async () => { const r = await claude('alt', { action: 'alt', src: im.src }); if (r?.alt) setAltDraft((x) => ({ ...x, [im.src]: r.alt })); }}>Suggest</button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -417,6 +470,20 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
               <div className="bs-change">
                 <div className="bs-card-title" style={{ marginTop: 0, fontSize: 15 }}>Duplicate this page</div>
                 <p className="sub" style={{ fontSize: 13 }}>Makes a new page with this one’s design and edits, at its own address. It stays unpublished until you publish it.</p>
+                <div className="field"><label>Have Claude write it (optional)</label>
+                  <textarea className="textarea" rows={2} value={brief} onChange={(e) => setBrief(e.target.value)}
+                    placeholder="e.g. State Farm claims: how we work with State Farm customers in Saginaw, direct billing, rentals" />
+                  <span className="hint">Claude rewrites this page’s copy for the new topic using only facts already on the site, and fills in the fields below. Every change shows as an edit you can review or undo before publishing.</span>
+                </div>
+                <button className="btn sm" disabled={!!busy || brief.trim().length < 4}
+                  onClick={async () => {
+                    const r = await claude('draft', { action: 'draft', brief });
+                    if (!r) return;
+                    const slug = brief.split(/[:.,—-]/)[0].toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                    setDup((d) => ({ path: d.path || `/${slug}/`, title: r.title || d.title, description: r.description || d.description, headline: r.headline || d.headline }));
+                    setRewrites(r.rewrites ?? []);
+                  }}>{busy === 'draft' ? 'Claude is writing… (up to a minute)' : 'Write it with Claude'}</button>
+                {rewrites.length > 0 && <span className="chip ok" style={{ alignSelf: 'flex-start' }}>Claude rewrote {rewrites.length} blocks of copy</span>}
                 <div className="field"><label>Address</label>
                   <input className="input" value={dup.path} onChange={(e) => setDup({ ...dup, path: e.target.value })} placeholder="/state-farm-collision-repair/" /></div>
                 <div className="field"><label>Page title</label>
@@ -427,7 +494,7 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
                   <textarea className="textarea" rows={2} value={dup.description} onChange={(e) => setDup({ ...dup, description: e.target.value })} /></div>
                 <button className="btn sm dark" disabled={!!busy || !dup.path.trim() || !dup.title.trim()}
                   onClick={async () => {
-                    const r = await act('dup', { action: 'duplicate', ...dup });
+                    const r = await act('dup', { action: 'duplicate', ...dup, rewrites });
                     if (r && (r as any).id) router.push(`/body-shop/sites/${site.slug}/p/${(r as any).id}`);
                   }}>{busy === 'dup' ? 'Creating…' : 'Create page'}</button>
               </div>
@@ -484,7 +551,7 @@ export default function PageEditor({ site, page, orig, changed, broken, history,
 
       {picker && (
         <MediaPicker
-          dealershipId={null} dealerSlug={null} dealerName={site.name}
+          dealershipId={null} dealerSlug={null} dealerName={site.name} bsSite={{ id: site.id, slug: site.slug, name: site.name }}
           onClose={() => setPicker(null)}
           onPick={async (url) => {
             const which = picker;

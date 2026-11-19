@@ -46,10 +46,14 @@ export type BsSite = {
   announce: Announce; live_announce: Announce;
   /** A scheduled "publish everything", and who set it. */
   publish_at: string | null; publish_by: string | null;
+  /** Where the site's images, share images and video live once moved to Blob (else /sites/<slug>). */
+  asset_base: string | null;
 };
 
 /** A bar across the top of every page: holiday hours, closures, a promotion. */
 export type Announce = { text?: string; linkText?: string; href?: string; start?: string; end?: string; color?: 'navy' | 'red' | 'gold' | 'green' };
+/** Each site's own image/video files, listed at build time (scripts/asset-manifest.mjs). */
+export { default as ASSET_MANIFEST } from './generated/asset-manifest.json';
 const ANNOUNCE_BG = { navy: '#002256', red: '#b3261e', gold: '#b8922f', green: '#0a6b45' } as const;
 export type BsPage = {
   id: number; site_id: number; path: string; title: string; base_html: string;
@@ -129,6 +133,9 @@ alter table bs_sites add column if not exists live_announce jsonb not null defau
 alter table bs_sites add column if not exists publish_at    timestamptz;
 alter table bs_sites add column if not exists publish_by    text;
 alter table users add column if not exists bs_publish boolean not null default false;
+-- Media uploaded for a body shop site, and where a site's own images/video live once moved to Blob.
+alter table media add column if not exists bs_site_id int references bs_sites(id) on delete set null;
+alter table bs_sites add column if not exists asset_base text;
 -- Share links for unpublished changes: anyone with the link sees the draft, until it expires.
 create table if not exists bs_previews (
   token       text primary key,
@@ -207,12 +214,13 @@ const escRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
  */
 const APPLY_JS = `(function(){var E=window.__WS||[],L=window.__WSL||'';function n(s){return (s||'').replace(/\\s+/g,' ').trim()}
 function mk(el){var v=el.getAttribute('data-ws');return v?v.split(' '):[]}
+var B=window.__WSB||'',S=window.__WSS||'';function cs(u){u=u||'';if(B&&u.indexOf(B+'/')===0)return u.slice(B.length);if(S&&u.indexOf(S+'/')===0)return u.slice(S.length);return u}
 function leaf(r,t){var all=[r].concat(Array.prototype.slice.call(r.querySelectorAll('*'))),hit=null;for(var i=0;i<all.length;i++)if(n(all[i].textContent)===t)hit=all[i];return hit}
 window.__wsApply=function(root){root=root||document;
 for(var i=0;i<E.length;i++){var e=E[i];if(e.kind==='replace')continue;
 var els=root.querySelectorAll(e.kind==='text'||e.kind==='hide'||e.kind==='dup'?e.tag:e.kind==='link'?'a':'img'),c=0;
 for(var j=0;j<els.length;j++){var el=els[j],m=mk(el),done=m.indexOf(e.id)>=0;
-if(el.hasAttribute('data-ws-clone'))continue;if(!done&&!(e.kind==='text'||e.kind==='hide'||e.kind==='dup'?n(el.textContent)===e.from:e.kind==='link'?el.getAttribute('href')===e.from:el.getAttribute('src')===e.from))continue;
+if(el.hasAttribute('data-ws-clone'))continue;if(!done&&!(e.kind==='text'||e.kind==='hide'||e.kind==='dup'?n(el.textContent)===e.from:e.kind==='link'?el.getAttribute('href')===e.from:cs(el.getAttribute('src'))===cs(e.from)))continue;
 var x=c++;if(e.nth!=null&&x!==e.nth)continue;if(done)continue;
 if(e.kind==='text')el.innerHTML=e.to;else if(e.kind==='hide')el.setAttribute('data-ws-hidden','');else if(e.kind==='dup'){var cl=el.cloneNode(true);cl.removeAttribute('data-ws');cl.setAttribute('data-ws-clone',e.id);var lf=leaf(cl,e.leaf);if(lf)lf.textContent=e.to;el.parentNode.insertBefore(cl,el.nextSibling)}else if(e.kind==='img'){el.setAttribute('src',e.to);el.removeAttribute('srcset')}
 else if(e.kind==='alt')el.setAttribute('alt',e.to);
@@ -222,7 +230,18 @@ if(L){var as=root.querySelectorAll('a[href^="/"]');for(var k=0;k<as.length;k++){
 if(document.readyState!=='loading')window.__wsApply(document.getElementById('app'));else document.addEventListener('DOMContentLoaded',function(){window.__wsApply(document.getElementById('app'))});})();`;
 
 /** The server half of the overlay: the same rules as APPLY_JS, on the parsed page. */
-function applyServer($: cheerio.CheerioAPI, app: cheerio.Cheerio<any>, edits: Edit[], misses?: Set<string>) {
+/**
+ * An image address without where the site's files are kept, so an edit made when they were
+ * under /sites/<slug>/ still matches after they move to Blob (and the other way round).
+ */
+export function canonSrc(u: string | undefined, base: string, assetBase?: string | null) {
+  if (!u) return '';
+  if (assetBase && u.startsWith(assetBase + '/')) return u.slice(assetBase.length);
+  if (u.startsWith(base + '/')) return u.slice(base.length);
+  return u;
+}
+
+function applyServer($: cheerio.CheerioAPI, app: cheerio.Cheerio<any>, edits: Edit[], misses?: Set<string>, canon: (u?: string) => string = (u) => u ?? '') {
   for (const e of edits) {
     if (e.kind === 'replace') continue;
     let c = 0, hit = 0;
@@ -232,7 +251,7 @@ function applyServer($: cheerio.CheerioAPI, app: cheerio.Cheerio<any>, edits: Ed
       if (el.attr('data-ws-clone') !== undefined) return;
       const m = (el.attr('data-ws') || '').split(' ').filter(Boolean);
       const done = m.includes(e.id);
-      const match = done || (byText ? norm(el.text()) === e.from : e.kind === 'link' ? el.attr('href') === e.from : el.attr('src') === e.from);
+      const match = done || (byText ? norm(el.text()) === e.from : e.kind === 'link' ? el.attr('href') === e.from : canon(el.attr('src')) === canon(e.from));
       if (!match) return;
       const x = c++;
       if (e.nth != null && x !== e.nth) return;
@@ -269,7 +288,7 @@ function applyServer($: cheerio.CheerioAPI, app: cheerio.Cheerio<any>, edits: Ed
  * opts.misses: collects the ids of edits that no longer match anything on the page.
  */
 export function renderPage(
-  site: Pick<BsSite, 'slug' | 'edits' | 'live_edits'> & Partial<Pick<BsSite, 'info' | 'live_info' | 'info_base' | 'announce' | 'live_announce'>>,
+  site: Pick<BsSite, 'slug' | 'edits' | 'live_edits'> & Partial<Pick<BsSite, 'info' | 'live_info' | 'info_base' | 'announce' | 'live_announce' | 'asset_base'>>,
   page: BsPage, mode: 'live' | 'draft' | 'edit',
   opts: { linkBase?: string; misses?: Set<string> } = {},
 ) {
@@ -288,10 +307,13 @@ export function renderPage(
     html = html.split(e.from).join(e.to);
   }
 
-  // 2. Asset paths: the files live under /sites/<slug>/ in this app.
+  // 2. Asset paths: scripts and fonts live under /sites/<slug>/ in this app; images, share images
+  //    and video too, unless they've been moved to Blob (asset_base).
   const base = `/sites/${site.slug}`;
+  const media = site.asset_base || base;
   html = html
-    .replace(/(["'(\s,])\/(img|js|fonts|og|video)\//g, `$1${base}/$2/`)
+    .replace(/(["'(\s,])\/(img|og|video)\//g, `$1${media}/$2/`)
+    .replace(/(["'(\s,])\/(js|fonts)\//g, `$1${base}/$2/`)
     .replace(/(["'])\/favicon\.webp/g, `$1${base}/favicon.webp`)
     .replace(/runtime\.js\?v=[a-z0-9]+/, 'runtime.js?v=ws1');
 
@@ -319,7 +341,7 @@ export function renderPage(
 
   // 4. Text, image, link and alt-text edits on the server-rendered page.
   const app = $('#app');
-  applyServer($, app, edits, opts.misses);
+  applyServer($, app, edits, opts.misses, (u) => canonSrc(u, base, site.asset_base));
 
   // 5. On the studio's address, keep the page's own links inside /s/<slug>/. The browser does
   //    the same after the site's script re-draws (APPLY_JS reads __WSL).
@@ -342,7 +364,7 @@ export function renderPage(
     $('body').append(`<script>${EDIT_JS}</script>`);
   } else {
     $('head').append('<style>[data-ws-hidden]{display:none!important}</style>');
-    $('head').append(`<script>window.__WSB=${JSON.stringify(base)};window.__WSL=${JSON.stringify(lb)};window.__WS=${JSON.stringify(overlay).replace(/</g, '\\u003c')};${APPLY_JS}</script>`);
+    $('head').append(`<script>window.__WSB=${JSON.stringify(media)};window.__WSS=${JSON.stringify(base)};window.__WSL=${JSON.stringify(lb)};window.__WS=${JSON.stringify(overlay).replace(/</g, '\\u003c')};${APPLY_JS}</script>`);
     if (!live) $('head').append('<meta name="robots" content="noindex">');
   }
   return $.html();
@@ -400,14 +422,18 @@ document.addEventListener('click',function(e){var el=editable(e.target);var a=e.
  if(el.tagName==='IMG'){var s=el.getAttribute('src');var q=place(sameAttr('img','src',s),el);parent.postMessage({ws:'img',src:s,alt:el.getAttribute('alt')||'',nth:q.nth,count:q.count},'*');return}
  if(el.contentEditable==='true')return;el.removeAttribute('data-ws-hover');
  var from=n(el.textContent);var pl=place(sameText(el,from),el);var before=el.innerHTML;el.contentEditable='true';el.focus();
+ parent.postMessage({ws:'focus',tag:el.tagName.toLowerCase(),from:from,nth:pl.nth,count:pl.count},'*');
  el.addEventListener('keydown',function k(ev){if(ev.key==='Enter'&&!ev.shiftKey){ev.preventDefault();el.blur()}if(ev.key==='Escape'){el.innerHTML=before;el.blur()}});
  el.addEventListener('blur',function b(){el.removeEventListener('blur',b);el.contentEditable='false';if(el.innerHTML!==before)parent.postMessage({ws:'text',tag:el.tagName.toLowerCase(),from:from,to:el.innerHTML.trim(),nth:pl.nth,count:pl.count},'*')});
 },true);
 // A repeating item around the clicked element (list item, card, nav link): the nearest
 // ancestor that has a same-tag, same-class sibling. Lets the editor hide it or add one after it.
-function item(el){var cur=el;for(var d=0;d<7&&cur&&cur!==APP;d++){var p=cur.parentNode;if(!p||p===APP)break;
- var sib=Array.prototype.filter.call(p.children,function(c){return c.tagName===cur.tagName&&(c.getAttribute('class')||'')===(cur.getAttribute('class')||'')});
- if(sib.length>=2&&cur.tagName!=='SECTION'&&n(cur.textContent))return cur;cur=p}return null}
+function sig(c){return c.tagName+'|'+(c.getAttribute('class')||'')+'|'+(c.getAttribute('style')||'')}
+function item(el){var cur=el;for(var d=0;d<7&&cur&&cur!==APP;d++){var p=cur.parentNode;if(!p||p===APP||p===APP.firstElementChild)break;
+ var t=n(cur.textContent);
+ if(cur.tagName==='LI'&&t)return cur;
+ var me=sig(cur),sib=Array.prototype.filter.call(p.children,function(c){return sig(c)===me});
+ if(sib.length>=2&&(cur.getAttribute('class')||cur.getAttribute('style'))&&/^(DIV|ARTICLE|A|LI)$/.test(cur.tagName)&&t&&t.length<=400)return cur;cur=p}return null}
 document.addEventListener('click',function(e){var el=editable(e.target);if(!el||el.tagName==='IMG'){parent.postMessage({ws:'noitem'},'*');return}
  var it=item(el);if(!it){parent.postMessage({ws:'noitem'},'*');return}
  var t=n(it.textContent);var p=place(sameText(it,t),it);
@@ -488,7 +514,7 @@ export function cleanPath(input: string) {
  * A new page that starts as a copy of another: same design and edits, its own address,
  * title, description and (optionally) headline. It's a draft until someone publishes it.
  */
-export async function duplicatePage(site: BsSite, src: BsPage, o: { path: string; title: string; description?: string; headline?: string; by: string }) {
+export async function duplicatePage(site: BsSite, src: BsPage, o: { path: string; title: string; description?: string; headline?: string; by: string; rewrites?: { tag: string; from: string; to: string }[] }) {
   const origin = `https://${site.domains.find((d) => !d.startsWith('www.')) ?? site.domains[0]}`;
   let html = src.base_html;
   // The page's own address in its canonical tag, share tags and search markup.
@@ -503,6 +529,11 @@ export async function duplicatePage(site: BsSite, src: BsPage, o: { path: string
       const cur = norm(cheerio.load(renderPage(site, src, 'draft'))('#app h1').first().text());
       edits.push({ id: editId(), kind: 'text', tag: 'h1', from: cur, to: esc(o.headline), scope: 'page', at: new Date().toISOString(), by: o.by });
     }
+  }
+  // Claude's draft: copy rewritten block by block, as ordinary text edits people can undo.
+  for (const r of o.rewrites ?? []) {
+    if (!/^(h[1-6]|p|li)$/.test(r.tag) || !r.from || !r.to) continue;
+    edits.push({ id: editId(), kind: 'text', tag: r.tag, from: norm(r.from), to: esc(r.to), scope: 'page', at: new Date().toISOString(), by: `${o.by} with Claude` });
   }
   const meta: Meta = { ...src.meta, title: o.title, ...(o.description ? { description: o.description } : {}) };
   const [pg] = await sql<BsPage[]>`

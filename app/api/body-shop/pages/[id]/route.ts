@@ -100,7 +100,8 @@ export const POST = route<IdCtx>(async (req, user, ctx) => {
       const [taken] = await sql`select 1 from bs_pages where site_id = ${site.id} and path = ${path}`;
       if (taken) return fail('A page already has that address');
       const full = (await getSite(site.slug))!;
-      const pg = await duplicatePage(full, page, { path, title, description: String(b.description || '').trim() || undefined, headline: String(b.headline || '').trim() || undefined, by: user.name });
+      const rewrites = Array.isArray(b.rewrites) ? b.rewrites.slice(0, 120).map((r: any) => ({ tag: String(r.tag || ''), from: String(r.from || ''), to: String(r.to || '').slice(0, 2000) })) : [];
+      const pg = await duplicatePage(full, page, { path, title, description: String(b.description || '').trim() || undefined, headline: String(b.headline || '').trim() || undefined, by: user.name, rewrites });
       return json({ ok: true, id: pg.id });
     }
     case 'status': {

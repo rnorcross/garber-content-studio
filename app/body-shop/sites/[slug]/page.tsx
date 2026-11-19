@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
 import { sql } from '@/lib/db';
 import TopBar from '@/components/TopBar';
-import { getSite, siteChanged, canPublish, type BsPage } from '@/lib/bodyshop';
+import { getSite, siteChanged, canPublish, ASSET_MANIFEST, type BsPage } from '@/lib/bodyshop';
 import SiteTools from './SiteTools';
 
 export const dynamic = 'force-dynamic';
@@ -50,7 +50,8 @@ export default async function SitePage({ params }: { params: Promise<{ slug: str
 
         <SiteTools slug={site.slug} edits={site.edits} liveEdits={site.live_edits} domains={site.domains} waiting={waiting} redirects={redirects}
           canPublish={publisher} publishAt={site.publish_at ? new Date(site.publish_at).toISOString() : null} publishBy={site.publish_by} requests={JSON.parse(JSON.stringify(requests))}
-          announce={site.announce} liveAnnounce={site.live_announce} others={others} />
+          announce={site.announce} liveAnnounce={site.live_announce} others={others}
+          isAdmin={user.role === 'admin'} files={(ASSET_MANIFEST as Record<string, { path: string; size: number }[]>)[site.slug] ?? []} assetBase={site.asset_base} />
 
         {GROUPS.map(([label, test]) => {
           const list = pages.filter((p) => test(p.path));

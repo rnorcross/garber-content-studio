@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { uploadMedia, absolute, type Media } from '@/lib/upload';
+import { uploadMedia, absolute, LARGE_IMAGE, type Media } from '@/lib/upload';
 import { formatBytes } from '@/lib/fragment';
 
 type Props = {
@@ -8,13 +8,16 @@ type Props = {
   dealerSlug: string | null;
   dealerName: string | null;
   accept?: string;
+  /** A body shop site: its own library tab, and uploads go to its Blob folder as WebP. */
+  bsSite?: { id: number; slug: string; name: string } | null;
   onPick: (url: string, media: Media) => void;
   onClose: () => void;
 };
 
 /** Modal for choosing a file from the media library or uploading a new one. */
-export default function MediaPicker({ dealershipId, dealerSlug, dealerName, accept = 'image/*', onPick, onClose }: Props) {
-  const [scope, setScope] = useState<'dealer' | 'all'>(dealershipId ? 'dealer' : 'all');
+export default function MediaPicker({ dealershipId, dealerSlug, dealerName, accept = 'image/*', bsSite = null, onPick, onClose }: Props) {
+  const [scope, setScope] = useState<'dealer' | 'all' | 'shop' | 'shops'>(bsSite ? 'shop' : dealershipId ? 'dealer' : 'all');
+  const [warn, setWarn] = useState('');
   const [items, setItems] = useState<Media[] | null>(null);
   const [q, setQ] = useState('');
   const [busy, setBusy] = useState('');
@@ -25,10 +28,12 @@ export default function MediaPicker({ dealershipId, dealerSlug, dealerName, acce
   useEffect(() => {
     const p = new URLSearchParams();
     if (scope === 'dealer') p.set('d', dealershipId ? String(dealershipId) : 'group');
+    if (scope === 'shop' && bsSite) p.set('bs', String(bsSite.id));
+    if (scope === 'shops') p.set('bs', 'any');
     if (q.trim()) p.set('q', q.trim());
     setItems(null);
     fetch(`/api/media?${p}`).then((r) => r.json()).then((d) => setItems(d.items ?? [])).catch((e) => setError(e.message));
-  }, [scope, q, dealershipId, reload]);
+  }, [scope, q, dealershipId, reload, bsSite]);
 
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -43,7 +48,15 @@ export default function MediaPicker({ dealershipId, dealerSlug, dealerName, acce
       let last: Media | null = null;
       for (const f of Array.from(files)) {
         setBusy(`Uploading ${f.name}…`);
-        last = await uploadMedia(f, { dealershipId, dealerSlug, onProgress: (p) => setBusy(`Uploading ${f.name}… ${p}%`) });
+        last = await uploadMedia(f, bsSite
+          ? { bsSiteId: bsSite.id, bsSlug: bsSite.slug, onProgress: (p) => setBusy(`Uploading ${f.name}… ${p}%`) }
+          : { dealershipId, dealerSlug, onProgress: (p) => setBusy(`Uploading ${f.name}… ${p}%`) });
+      }
+      // A big image slows the page on phones: say so before it's used.
+      if (last && bsSite && last.content_type?.startsWith('image/') && (last.size ?? 0) > LARGE_IMAGE) {
+        setWarn(`${last.filename} is ${formatBytes(last.size!)} even after compressing. It will work, but a smaller or tighter-cropped photo keeps the page fast.`);
+        setReload((n) => n + 1);
+        return;
       }
       if (last && files.length === 1) { onPick(absolute(last.url), last); return; }
       setReload((n) => n + 1);
@@ -63,9 +76,19 @@ export default function MediaPicker({ dealershipId, dealerSlug, dealerName, acce
         </div>
         <div className="row" style={{ padding: '12px 16px', borderBottom: '1px solid var(--line)' }}>
           <div className="seg">
-            {dealershipId && <button className={scope === 'dealer' ? 'on' : ''} onClick={() => setScope('dealer')}>{dealerName}</button>}
-            {!dealershipId && <button className={scope === 'dealer' ? 'on' : ''} onClick={() => setScope('dealer')}>Group</button>}
-            <button className={scope === 'all' ? 'on' : ''} onClick={() => setScope('all')}>All dealerships</button>
+            {bsSite ? (
+              <>
+                <button className={scope === 'shop' ? 'on' : ''} onClick={() => setScope('shop')}>{bsSite.name}</button>
+                <button className={scope === 'shops' ? 'on' : ''} onClick={() => setScope('shops')}>All body shops</button>
+                <button className={scope === 'all' ? 'on' : ''} onClick={() => setScope('all')}>Everything</button>
+              </>
+            ) : (
+              <>
+                {dealershipId && <button className={scope === 'dealer' ? 'on' : ''} onClick={() => setScope('dealer')}>{dealerName}</button>}
+                {!dealershipId && <button className={scope === 'dealer' ? 'on' : ''} onClick={() => setScope('dealer')}>Group</button>}
+                <button className={scope === 'all' ? 'on' : ''} onClick={() => setScope('all')}>All dealerships</button>
+              </>
+            )}
           </div>
           <input className="input" style={{ maxWidth: 220, height: 34 }} placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search media" />
           <span style={{ flex: 1 }} />
@@ -74,6 +97,8 @@ export default function MediaPicker({ dealershipId, dealerSlug, dealerName, acce
         </div>
         {busy && <div className="notice blue" style={{ borderRadius: 0 }}>{busy}</div>}
         {error && <div className="notice warn" style={{ borderRadius: 0 }}>{error}</div>}
+        {warn && <div className="notice warn" style={{ borderRadius: 0 }}>{warn}</div>}
+        {bsSite && <div className="small muted" style={{ padding: '8px 16px', borderBottom: '1px solid var(--line)' }}>Photos are resized to 2400px and converted to WebP on upload.</div>}
         <div className="modal-body">
           {!items && <p className="muted small">Loading…</p>}
           {items && !images.length && <p className="muted small">Nothing here yet. Upload a file to add it to the library.</p>}
@@ -85,6 +110,7 @@ export default function MediaPicker({ dealershipId, dealerSlug, dealerName, acce
                 </span>
                 <span className="media-name">{m.filename}</span>
                 <span className="small muted">{[m.width && m.height ? `${m.width}×${m.height}` : '', m.size ? formatBytes(m.size) : ''].filter(Boolean).join(' · ')}</span>
+                {bsSite && m.content_type?.startsWith('image/') && (m.size ?? 0) > LARGE_IMAGE && <span className="chip warn" style={{ alignSelf: 'flex-start' }}>Large</span>}
               </button>
             ))}
           </div>

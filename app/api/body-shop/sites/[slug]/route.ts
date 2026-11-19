@@ -125,6 +125,16 @@ export const POST = route<Ctx>(async (req, user, ctx) => {
       revalidateTag(`bs:${site.slug}`);
       return json({ ok: true });
     }
+    case 'asset-base': {
+      // After the browser has copied the site's images and video to Blob: point the pages at them.
+      // null switches back to the copies in the app (/sites/<slug>/).
+      if (user.role !== 'admin') return fail('Admins only', 403);
+      const base = b.base ? String(b.base).replace(/\/$/, '') : null;
+      if (base && !new RegExp(`^https://[a-z0-9.-]+\\.blob\\.vercel-storage\\.com/body-shop/${site.slug}/assets$`, 'i').test(base)) return fail('That isn’t this site’s Blob folder');
+      await sql`update bs_sites set asset_base = ${base} where id = ${site.id}`;
+      revalidateTag(`bs:${site.slug}`);
+      return json({ ok: true });
+    }
     case 'domains': {
       const domains = String(b.domains ?? '').split(/[\s,]+/).map((d) => d.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '')).filter(Boolean);
       await sql`update bs_sites set domains = ${domains} where id = ${site.id}`;

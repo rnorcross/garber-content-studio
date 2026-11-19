@@ -6,15 +6,17 @@ import { api } from '@/lib/client';
 import type { Edit, Announce } from '@/lib/bodyshop';
 import PublishCard from './PublishCard';
 import AnnounceCard from './AnnounceCard';
+import SiteFilesCard from './SiteFilesCard';
 import CopyToShops from '@/components/CopyToShops';
 
 /** Site-wide changes: find & replace on every page, publish everything, domains. */
-export default function SiteTools({ slug, edits, liveEdits, domains, waiting, redirects, canPublish, publishAt, publishBy, requests, announce, liveAnnounce, others }: {
+export default function SiteTools({ slug, edits, liveEdits, domains, waiting, redirects, canPublish, publishAt, publishBy, requests, announce, liveAnnounce, others, isAdmin, files, assetBase }: {
   slug: string; edits: Edit[]; liveEdits: Edit[]; domains: string[]; waiting: number;
   redirects: { id: number; from_path: string; to_path: string; note: string | null; created_by: string | null }[];
   canPublish: boolean; publishAt: string | null; publishBy: string | null;
   requests: { id: number; user_name: string; note: string | null; created_at: string; page_title: string | null }[];
   announce: Announce; liveAnnounce: Announce; others: { slug: string; name: string }[];
+  isAdmin: boolean; files: { path: string; size: number }[]; assetBase: string | null;
 }) {
   const router = useRouter();
   const [rFrom, setRFrom] = useState('');
@@ -140,6 +142,8 @@ export default function SiteTools({ slug, edits, liveEdits, domains, waiting, re
           </div>
         ))}
       </div>
+
+      {isAdmin && <SiteFilesCard slug={slug} files={files} assetBase={assetBase} />}
 
       <div className="card card-pad stack" style={{ gridColumn: '1 / -1' }}>
         <div className="bs-card-title" style={{ marginTop: 0 }}>Domains</div>

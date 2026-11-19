@@ -13,11 +13,14 @@ export const GET = route(async (req) => {
   const u = new URL(req.url);
   if (u.searchParams.has('mode')) return json({ mode: storageMode() });
   const d = u.searchParams.get('d') ?? '';
+  const bs = u.searchParams.get('bs') ?? ''; // a body shop site's id, or 'any' for every body shop file
   const q = (u.searchParams.get('q') ?? '').trim();
   const rows = await sql<MediaRow[]>`
     select m.*, dl.name as dealership, us.name as uploaded_by_name
     from media m left join dealerships dl on dl.id = m.dealership_id left join users us on us.id = m.uploaded_by
-    where (${d} = '' or (${d} = 'group' and m.dealership_id is null) or m.dealership_id::text = ${d})
+    where (${d} = '' or (${d} = 'group' and m.dealership_id is null and m.bs_site_id is null) or m.dealership_id::text = ${d})
+      and (${bs} = '' or (${bs} = 'any' and m.bs_site_id is not null) or m.bs_site_id::text = ${bs})
+      and m.pathname not like 'body-shop/%/assets/%'
       and (${q} = '' or m.filename ilike ${'%' + q + '%'} or coalesce(m.alt, '') ilike ${'%' + q + '%'})
     order by m.created_at desc limit 500`;
   return json({ mode: storageMode(), items: rows });
@@ -30,9 +33,10 @@ export const POST = route(async (req, user) => {
   if (!/^https:\/\/[a-z0-9.-]+\.blob\.vercel-storage\.com\//i.test(url)) return fail('Not a Blob URL');
   if (b.contentType && !ALLOWED_TYPES.includes(b.contentType)) return fail('That file type isn’t allowed');
   const [row] = await sql`
-    insert into media (url, pathname, filename, content_type, size, width, height, alt, dealership_id, uploaded_by)
+    insert into media (url, pathname, filename, content_type, size, width, height, alt, dealership_id, bs_site_id, uploaded_by)
     values (${url}, ${String(b.pathname || '')}, ${String(b.filename || 'file')}, ${b.contentType || null}, ${Number(b.size) || null},
-            ${Number(b.width) || null}, ${Number(b.height) || null}, ${b.alt || null}, ${b.dealershipId ? Number(b.dealershipId) : null}, ${user.id})
+            ${Number(b.width) || null}, ${Number(b.height) || null}, ${b.alt || null}, ${b.dealershipId ? Number(b.dealershipId) : null},
+            ${b.bsSiteId ? Number(b.bsSiteId) : null}, ${user.id})
     on conflict (url) do update set alt = coalesce(excluded.alt, media.alt)
     returning *`;
   return json(row);
